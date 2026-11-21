@@ -11,6 +11,7 @@ import {
   useRunStore,
   type SimulationConfig,
 } from "@/features/simulation";
+import { PageMeta } from "@/shared/seo";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -155,6 +156,12 @@ export function SandboxPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <PageMeta
+        title="Sandbox — ScaleLab"
+        description="Stress-test a reference architecture with custom traffic, latency, and budget targets in the ScaleLab sandbox."
+        path="/sandbox"
+      />
+
       <div className="flex flex-wrap items-center gap-2 border-b bg-card/40 px-4 py-2.5">
         <Badge variant="outline" className="gap-1.5 font-mono text-[10px] uppercase">
           <FlaskConical className="size-3" aria-hidden="true" />

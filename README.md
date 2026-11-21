@@ -38,6 +38,8 @@ fetch.
   replication lag, and multi-region placement with cross-region latency.
 - **Phase 3 — scale**: a sandbox with arbitrary load sliders, shareable designs
   encoded into the URL, and a concept-card library on `/learn`.
+- **SEO + sharing**: canonical URLs, per-route titles and descriptions, Open
+  Graph and Twitter cards, a 1200×630 social image, and `robots.txt`/`sitemap.xml`.
 
 The workspace at `/challenge/:id` now runs a complete challenge loop: design,
 run, diagnose, and retry. The engine is also usable headlessly from
@@ -188,6 +190,26 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   string. Opening it loads that exact design in the challenge workspace.
 - `/learn` ships the concept-card library for caching, CDNs, queues, workers,
   replicas, sharding, rate limiting, backpressure, and multi-region design.
+
+## Sharing and metadata at a glance
+
+ScaleLab is published at `https://scalelab.anirudhkille.com`. Metadata is split
+between the static shell and the React tree:
+
+- `index.html` carries the crawler-visible Open Graph and Twitter card tags,
+  including the 1200×630 `public/og-image.png`, image dimensions, alt text, and
+  the canonical site URL.
+- Every route renders one `PageMeta` component. React 19 hoists its `<title>`,
+  `<meta name="description">`, robots directive, and canonical link into
+  `<head>`, so the browser tab and description follow navigation.
+- Challenge pages use the challenge title and concepts for their metadata;
+  `/sandbox`, `/progress`, `/learn`, and `/dev/engine` have their own copy.
+- `/dev/engine` and the not-found page are marked `noindex`.
+- `public/robots.txt` allows public routes, blocks `/dev/`, and points to
+  `public/sitemap.xml`.
+- Social crawlers do not execute SPA JavaScript, so the static OG tags stay
+  site-wide. Page-specific descriptions still update for browsers and search
+  engines that render the app.
 
 ## Engine at a glance
 

@@ -1,6 +1,7 @@
 import { ArrowRight, BookOpen, FlaskConical, Layers } from "lucide-react";
 import { Link } from "react-router";
 
+import { PageMeta } from "@/shared/seo";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
@@ -25,6 +26,12 @@ const ROADMAP = [
 export function HubPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
+      <PageMeta
+        title="ScaleLab — System Design Stress-Testing Playground"
+        description="Build a system architecture, hit it with simulated traffic and injected failures, then learn exactly which component breaks first."
+        path="/"
+      />
+
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
           Resilience + scale · Phase 2/3

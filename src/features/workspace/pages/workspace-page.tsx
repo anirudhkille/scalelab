@@ -33,6 +33,7 @@ import {
   type AttemptScore,
 } from "@/features/progress";
 import { isSimSpeed, useSettingsStore, type SimSpeed } from "@/features/settings";
+import { PageMeta } from "@/shared/seo";
 import {
   selectRunHistory,
   selectRunResult,
@@ -250,6 +251,12 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <PageMeta
+        title={`${challenge.title} — ScaleLab`}
+        description={`Practice the ${challenge.title} challenge: ${challenge.concepts.slice(0, 3).join(", ")}. Build the system, run the load test, and diagnose the bottleneck.`}
+        path={`/challenge/${challenge.id}`}
+      />
+
       <WorkspaceTopbar
         challenge={challenge}
         status={status}

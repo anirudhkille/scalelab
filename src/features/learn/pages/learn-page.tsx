@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { PageMeta } from "@/shared/seo";
+
 type ConceptCard = {
   readonly title: string;
   readonly icon: LucideIcon;
@@ -89,6 +91,12 @@ const CONCEPTS: readonly ConceptCard[] = [
 export function LearnPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+      <PageMeta
+        title="System Design Concepts — ScaleLab"
+        description="Short explainers for caching, CDNs, queues, workers, replicas, sharding, rate limiting, backpressure, and multi-region design."
+        path="/learn"
+      />
+
       <div className="max-w-2xl">
         <p className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
           <Sparkles className="size-3" aria-hidden="true" />

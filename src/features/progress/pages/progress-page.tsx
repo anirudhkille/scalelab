@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { CHALLENGES, difficultyLabel } from "@/features/challenges";
 import { useSettingsStore } from "@/features/settings";
+import { PageMeta } from "@/shared/seo";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -157,6 +158,12 @@ export function ProgressPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+      <PageMeta
+        title="Progress & Attempts — ScaleLab"
+        description="Review your ScaleLab attempts, star scores, saved designs, and the system design concepts you have practiced."
+        path="/progress"
+      />
+
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
