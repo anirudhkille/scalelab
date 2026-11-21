@@ -189,7 +189,7 @@ export function SandboxPage() {
   }, [architecture, config, resetRun, startRun]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
       <PageMeta
         title="Sandbox — ScaleLab"
         description="Stress-test a reference architecture with custom traffic, latency, and budget targets in the ScaleLab sandbox."
