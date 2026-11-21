@@ -178,14 +178,14 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
 - Challenges can inject node kills, degraded nodes, or availability-zone
   outages. The runner applies the effect for a fixed window, then the failure
   report explains what broke.
-- Availability is accrued across each run and feeds scoring alongside the target
-  load, budget, and 2× headroom.
+- Availability is request success across the run, not healthy-tick uptime, and
+  feeds scoring alongside the target load, budget, and 2× headroom.
 - Caches support write-around, write-through, and write-back. Async database
   replicas add replication lag under write pressure.
 - Every node carries a region and zone; cross-region edges add latency and zone
-  outages only affect nodes in the targeted zone.
+  outages require both a region and zone, so one region cannot take down another.
 - `/sandbox` runs a reference design against arbitrary users, request rate, read
-  and static mix, p95 SLO, and monthly budget.
+  and static mix, p95 SLO, and monthly budget, then scores the result.
 - The share button copies a URL with the current design encoded in the query
   string. Opening it loads that exact design in the challenge workspace.
 - `/learn` ships the concept-card library for caching, CDNs, queues, workers,
@@ -204,7 +204,8 @@ between the static shell and the React tree:
   `<head>`, so the browser tab and description follow navigation.
 - Challenge pages use the challenge title and concepts for their metadata;
   `/sandbox`, `/progress`, `/learn`, and `/dev/engine` have their own copy.
-- `/dev/engine` and the not-found page are marked `noindex`.
+- `/progress`, `/dev/engine`, and the not-found page are marked `noindex`;
+  progress is local data and is not listed in the sitemap.
 - `public/robots.txt` allows public routes, blocks `/dev/`, and points to
   `public/sitemap.xml`.
 - Social crawlers do not execute SPA JavaScript, so the static OG tags stay

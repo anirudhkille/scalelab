@@ -41,6 +41,7 @@ const CONNECTION_LINE_STYLE = { stroke: "var(--edge-active)", strokeWidth: 2 };
 const SNAP_GRID: [number, number] = [16, 16];
 const FIT_VIEW_OPTIONS = { padding: 0.2 };
 const EMPTY_ISSUES: readonly GraphIssue[] = [];
+const EMPTY_MESSAGES: readonly string[] = [];
 
 type ArchitectureCanvasProps = {
   readonly nodeHealthById?: ReadonlyMap<NodeId, NodeHealth>;
@@ -48,6 +49,7 @@ type ArchitectureCanvasProps = {
   readonly crowdUsers?: number;
   readonly locked?: boolean;
   readonly flowing?: boolean;
+  readonly extraIssues?: readonly string[];
   readonly overlay?: ReactNode;
 };
 
@@ -57,6 +59,7 @@ export function ArchitectureCanvas({
   crowdUsers,
   locked = false,
   flowing = false,
+  extraIssues = EMPTY_MESSAGES,
   overlay,
 }: ArchitectureCanvasProps) {
   const architecture = useDesignStore(selectArchitecture);
@@ -290,7 +293,7 @@ export function ArchitectureCanvas({
             : "Drag a component in. Connect the handles. Select to tune it."}
         </Panel>
         <Panel position="bottom-right">
-          <ValidationPanel issues={issues} />
+          <ValidationPanel issues={issues} extraIssues={extraIssues} />
         </Panel>
       </ReactFlow>
 

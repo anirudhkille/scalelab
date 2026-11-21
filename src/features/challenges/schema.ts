@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   NODE_KINDS,
+  REGION_IDS,
   ZONE_IDS,
   architectureSchema,
   nodeIdSchema,
@@ -31,14 +32,45 @@ export const loadStageSchema = z.object({
 
 export type LoadStage = z.infer<typeof loadStageSchema>;
 
-export const failureEventSchema = z.object({
-  atSec: z.number().nonnegative(),
-  kind: z.enum(["killNode", "slowNode", "azOutage"]),
-  durationSec: z.number().positive().default(15),
-  nodeId: nodeIdSchema.optional(),
-  zone: z.enum(ZONE_IDS).optional(),
-  severityRatio: ratioSchema.optional(),
-});
+export const failureEventSchema = z
+  .object({
+    atSec: z.number().nonnegative(),
+    kind: z.enum(["killNode", "slowNode", "azOutage"]),
+    durationSec: z.number().positive().default(15),
+    nodeId: nodeIdSchema.optional(),
+    region: z.enum(REGION_IDS).optional(),
+    zone: z.enum(ZONE_IDS).optional(),
+    severityRatio: ratioSchema.optional(),
+  })
+  .superRefine((event, context) => {
+    if (event.kind === "killNode" || event.kind === "slowNode") {
+      if (event.nodeId === undefined) {
+        context.addIssue({
+          code: "custom",
+          message: "Node failures require a target nodeId.",
+          path: ["nodeId"],
+        });
+      }
+
+      return;
+    }
+
+    if (event.region === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "An AZ outage requires a target region.",
+        path: ["region"],
+      });
+    }
+
+    if (event.zone === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "An AZ outage requires a target zone.",
+        path: ["zone"],
+      });
+    }
+  });
 
 export type FailureEvent = z.infer<typeof failureEventSchema>;
 

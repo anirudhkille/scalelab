@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useParams, useSearchParams } from "react-router";
+import { Navigate, useParams, useSearchParams } from "react-router";
 
 import {
   ArchitectureCanvas,
@@ -16,10 +16,11 @@ import {
   type NodeId,
 } from "@/features/architecture";
 import {
-  challengeOrFallback,
+  challengeFor,
   referenceArchitectureFor,
   runConfigFor,
   starterArchitectureFor,
+  type Challenge,
 } from "@/features/challenges";
 import { FailureReportDialog, diagnoseFailure, type FailureDiagnosis } from "@/features/diagnosis";
 import { LiveMetricsPanel, ParticleLayer } from "@/features/playback";
@@ -41,6 +42,7 @@ import {
   selectRunStep,
   useRunSimulation,
   useRunStore,
+  validateFailureScenarios,
   type RunResult,
 } from "@/features/simulation";
 
@@ -56,11 +58,10 @@ type RunReport = {
 };
 
 type WorkspaceEditorProps = {
-  readonly challengeId: string;
+  readonly challenge: Challenge;
 };
 
-function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
-  const challenge = useMemo(() => challengeOrFallback(challengeId), [challengeId]);
+function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   const [searchParams] = useSearchParams();
   const architecture = useDesignStore(selectArchitecture);
   const loadArchitecture = useDesignStore((state) => state.loadArchitecture);
@@ -105,6 +106,14 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
   }, [architecture, challenge.id, saveDesign]);
 
   const runConfig = useMemo(() => runConfigFor(challenge.id), [challenge.id]);
+  const scenarioIssues = useMemo(
+    () => validateFailureScenarios(architecture.nodes, runConfig.failureScenarios ?? []),
+    [architecture.nodes, runConfig.failureScenarios],
+  );
+  const scenarioIssueMessages = useMemo(
+    () => scenarioIssues.map((issue) => issue.message),
+    [scenarioIssues],
+  );
   const running = status === "running";
 
   const nodeHealthById = useMemo<ReadonlyMap<NodeId, NodeHealth> | undefined>(() => {
@@ -261,6 +270,7 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
         challenge={challenge}
         status={status}
         speed={simSpeed}
+        scenarioIssues={scenarioIssueMessages}
         onRun={handleRun}
         onStop={handleStop}
         onSpeedChange={handleSpeedChange}
@@ -275,6 +285,7 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
             crowdUsers={step?.metrics.users}
             locked={running}
             flowing={running}
+            extraIssues={scenarioIssueMessages}
             overlay={<ParticleLayer />}
           />
           <InspectorPanel locked={running} />
@@ -340,6 +351,11 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
 
 export function WorkspacePage() {
   const { id = "unknown" } = useParams();
+  const challenge = challengeFor(id);
 
-  return <WorkspaceEditor key={id} challengeId={id} />;
+  if (!challenge) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <WorkspaceEditor key={challenge.id} challenge={challenge} />;
 }

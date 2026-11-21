@@ -10,12 +10,13 @@ import {
   type ComponentParamsByKind,
   type NodeKind,
 } from "@/features/architecture";
-import type { ChallengeRequirements } from "@/features/challenges";
+import { failureEventSchema, type ChallengeRequirements } from "@/features/challenges";
 import {
   applyFailureEffect,
   databaseReplicationLagMs,
   failureEffectFor,
   runSimulation,
+  validateFailureScenarios,
   type NodeBehaviorResult,
 } from "@/features/simulation";
 
@@ -113,6 +114,7 @@ describe("failure injection", () => {
       {
         atSec: 0,
         kind: "azOutage" as const,
+        region: "us-east" as const,
         zone: "b" as const,
         durationSec: 10,
       },
@@ -120,6 +122,46 @@ describe("failure injection", () => {
 
     expect(failureEffectFor(zoned.id, [zoned], failures, 2).killed).toBe(true);
     expect(failureEffectFor(zoned.id, [zoned], failures, 12).killed).toBe(false);
+  });
+
+  it("does not apply an AZ outage across regions", () => {
+    const zoned = node("app", "appServer", undefined, "b");
+    const failures = [
+      {
+        atSec: 0,
+        kind: "azOutage" as const,
+        region: "eu-west" as const,
+        zone: "b" as const,
+        durationSec: 10,
+      },
+    ];
+
+    expect(failureEffectFor(zoned.id, [zoned], failures, 2).killed).toBe(false);
+  });
+
+  it("requires targets for node and zone failures", () => {
+    expect(failureEventSchema.safeParse({ atSec: 0, kind: "killNode" }).success).toBe(false);
+    expect(failureEventSchema.safeParse({ atSec: 0, kind: "azOutage", zone: "a" }).success).toBe(
+      false,
+    );
+    expect(
+      failureEventSchema.safeParse({
+        atSec: 0,
+        kind: "azOutage",
+        region: "us-east",
+        zone: "a",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("reports scenarios whose targets are no longer in the design", () => {
+    const issues = validateFailureScenarios(architecture().nodes, [
+      { atSec: 1, kind: "killNode", nodeId: asNodeId("missing"), durationSec: 5 },
+      { atSec: 1, kind: "azOutage", region: "eu-west", zone: "c", durationSec: 5 },
+    ]);
+
+    expect(issues).toHaveLength(2);
+    expect(issues.map((issue) => issue.code)).toEqual(["missing-node", "missing-zone"]);
   });
 
   it("turns a killed node into dropped traffic", () => {

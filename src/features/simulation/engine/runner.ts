@@ -205,9 +205,9 @@ export function createSimulationEngine(
       nodes,
       monthlyCostUsd: monthlyCost,
     });
-    if (baseMetrics.errorRatio <= requirements.maxErrorRatio) {
-      availableSec += dtSec;
-    }
+    // Availability is request success, not healthy-tick uptime: a tick with
+    // 0.5% errors contributes 99.5% of its duration.
+    availableSec += dtSec * (1 - baseMetrics.errorRatio);
     const availabilityRatio = elapsedSec > 0 ? availableSec / elapsedSec : 1;
     const metrics: RunMetrics = { ...baseMetrics, availabilityRatio };
 

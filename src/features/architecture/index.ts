@@ -46,7 +46,12 @@ export {
   type ComponentParams,
   type ComponentParamsByKind,
 } from "./model/schema";
-export { decodeArchitecture, encodeArchitecture } from "./model/share";
+export {
+  MAX_SHARE_LINK_LENGTH,
+  MAX_SHARE_PAYLOAD_LENGTH,
+  decodeArchitecture,
+  encodeArchitecture,
+} from "./model/share";
 export { componentSummary } from "./model/summary";
 export {
   ZERO_TRAFFIC,

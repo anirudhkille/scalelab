@@ -162,6 +162,7 @@ export function ProgressPage() {
         title="Progress & Attempts — ScaleLab"
         description="Review your ScaleLab attempts, star scores, saved designs, and the system design concepts you have practiced."
         path="/progress"
+        noIndex
       />
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">

@@ -4,17 +4,21 @@ import { formatGraphIssue, type GraphIssue } from "../model/graph";
 
 type ValidationPanelProps = {
   readonly issues: readonly GraphIssue[];
+  readonly extraIssues?: readonly string[];
 };
 
 const MAX_VISIBLE_ISSUES = 3;
+const NO_EXTRA_ISSUES: readonly string[] = [];
 
-export function ValidationPanel({ issues }: ValidationPanelProps) {
-  if (issues.length === 0) {
+export function ValidationPanel({ issues, extraIssues = NO_EXTRA_ISSUES }: ValidationPanelProps) {
+  const messages = [...issues.map((issue) => formatGraphIssue(issue)), ...extraIssues];
+
+  if (messages.length === 0) {
     return null;
   }
 
-  const visible = issues.slice(0, MAX_VISIBLE_ISSUES);
-  const remaining = issues.length - visible.length;
+  const visible = messages.slice(0, MAX_VISIBLE_ISSUES);
+  const remaining = messages.length - visible.length;
 
   return (
     <div
@@ -23,15 +27,12 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
     >
       <div className="flex items-center gap-2 text-xs font-medium">
         <AlertTriangle className="size-3.5 text-health-warm" aria-hidden="true" />
-        {issues.length} issue{issues.length === 1 ? "" : "s"} before the design can run
+        {messages.length} issue{messages.length === 1 ? "" : "s"} before the design can run
       </div>
       <ul className="mt-2 space-y-1.5">
-        {visible.map((issue) => (
-          <li
-            key={`${issue.code}:${formatGraphIssue(issue)}`}
-            className="text-[11px] leading-relaxed text-muted-foreground"
-          >
-            {formatGraphIssue(issue)}
+        {visible.map((message) => (
+          <li key={message} className="text-[11px] leading-relaxed text-muted-foreground">
+            {message}
           </li>
         ))}
       </ul>

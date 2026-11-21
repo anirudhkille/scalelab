@@ -14,6 +14,7 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 
 import {
+  MAX_SHARE_LINK_LENGTH,
   encodeArchitecture,
   formatGraphIssue,
   selectArchitecture,
@@ -55,6 +56,7 @@ type WorkspaceTopbarProps = {
   readonly challenge: Challenge;
   readonly status: RunStatus;
   readonly speed: SimSpeed;
+  readonly scenarioIssues: readonly string[];
   readonly onRun: () => void;
   readonly onStop: () => void;
   readonly onSpeedChange: (speed: SimSpeed) => void;
@@ -64,6 +66,7 @@ export function WorkspaceTopbar({
   challenge,
   status,
   speed,
+  scenarioIssues,
   onRun,
   onStop,
   onSpeedChange,
@@ -75,13 +78,27 @@ export function WorkspaceTopbar({
   const undo = useDesignStore((state) => state.undo);
   const redo = useDesignStore((state) => state.redo);
   const validation = useMemo(() => validateArchitecture(architecture), [architecture]);
-  const issueCount = validation.ok ? 0 : validation.issues.length;
-  const firstIssue = validation.ok ? null : validation.issues[0];
+  const graphIssueCount = validation.ok ? 0 : validation.issues.length;
+  const firstGraphIssue = validation.ok ? null : validation.issues[0];
+  const firstScenarioIssue = scenarioIssues[0] ?? null;
+  const issueCount = graphIssueCount + scenarioIssues.length;
+  const isValid = validation.ok && scenarioIssues.length === 0;
+  const firstIssueMessage =
+    firstScenarioIssue ?? (firstGraphIssue ? formatGraphIssue(firstGraphIssue) : null);
   const running = status === "running";
   const hasFinished = status === "passed" || status === "failed" || status === "stopped";
   const handleShare = useCallback(async () => {
+    const payload = encodeArchitecture(architecture);
+
+    if (payload.length > MAX_SHARE_LINK_LENGTH) {
+      toast.error("This design is too large to share as a link", {
+        description: "Remove a few components or use export to keep a copy.",
+      });
+      return;
+    }
+
     const url = new URL(window.location.href);
-    url.searchParams.set("design", encodeArchitecture(architecture));
+    url.searchParams.set("design", payload);
 
     try {
       await navigator.clipboard.writeText(url.toString());
@@ -115,7 +132,7 @@ export function WorkspaceTopbar({
       <span className="text-muted-foreground">/</span>
       <h1 className="text-sm font-medium">{challenge.title}</h1>
       <Badge variant="outline" className="font-mono text-[10px] tracking-wider uppercase">
-        Editor · M5
+        Editor · Phase 2/3
       </Badge>
       <Badge variant="outline" className={STATUS_CLASS[status]} aria-live="polite">
         {STATUS_LABEL[status]}
@@ -127,16 +144,16 @@ export function WorkspaceTopbar({
         </Badge>
 
         <Badge
-          variant={validation.ok ? "outline" : "destructive"}
+          variant={isValid ? "outline" : "destructive"}
           className="gap-1.5"
-          title={firstIssue ? formatGraphIssue(firstIssue) : "Design is ready to run"}
+          title={firstIssueMessage ?? "Design is ready to run"}
         >
-          {validation.ok ? (
+          {isValid ? (
             <CheckCircle2 className="size-3" aria-hidden="true" />
           ) : (
             <AlertTriangle className="size-3" aria-hidden="true" />
           )}
-          {validation.ok ? "Valid" : `${issueCount} issue${issueCount === 1 ? "" : "s"}`}
+          {isValid ? "Valid" : `${issueCount} issue${issueCount === 1 ? "" : "s"}`}
         </Badge>
 
         <Button
@@ -203,8 +220,8 @@ export function WorkspaceTopbar({
             type="button"
             size="sm"
             onClick={onRun}
-            disabled={!validation.ok}
-            title={validation.ok ? "Run the simulated load profile" : "Fix validation issues first"}
+            disabled={!isValid}
+            title={isValid ? "Run the simulated load profile" : "Fix validation issues first"}
           >
             {hasFinished ? <RotateCcw /> : <Play />}
             {hasFinished ? "Run again" : "Run load test"}

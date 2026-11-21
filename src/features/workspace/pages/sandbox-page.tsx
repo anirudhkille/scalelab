@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState, type ChangeEvent } from "react";
 import { FlaskConical, Play, Square } from "lucide-react";
 
-import { referenceArchitectureFor } from "@/features/challenges";
+import { challengeOrFallback, referenceArchitectureFor } from "@/features/challenges";
 import { LiveMetricsPanel } from "@/features/playback";
+import { StarRating, scoreAttempt } from "@/features/progress";
 import {
   selectRunResult,
   selectRunStatus,
@@ -51,6 +52,7 @@ function SandboxSlider({
   max,
   step,
   suffix,
+  disabled,
   onChange,
 }: {
   readonly id: string;
@@ -60,6 +62,7 @@ function SandboxSlider({
   readonly max: number;
   readonly step: number;
   readonly suffix?: string;
+  readonly disabled?: boolean;
   readonly onChange: (value: number) => void;
 }) {
   const handleChange = useCallback(
@@ -85,7 +88,8 @@ function SandboxSlider({
         max={max}
         step={step}
         value={value}
-        className="h-1.5 cursor-pointer accent-primary"
+        disabled={disabled}
+        className="h-1.5 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-50"
         onChange={handleChange}
       />
     </div>
@@ -102,6 +106,7 @@ export function SandboxPage() {
   const { startRun, stopRun } = useRunSimulation();
 
   const architecture = useMemo(() => referenceArchitectureFor(designId), [designId]);
+  const designChallenge = useMemo(() => challengeOrFallback(designId), [designId]);
   const running = status === "running";
 
   const config = useMemo<SimulationConfig>(
@@ -111,11 +116,11 @@ export function SandboxPage() {
         requestsPerUserPerSec: settings.requestsPerUserPerSec,
         readRatio: settings.readRatio,
         staticRatio: settings.staticRatio,
-        workingSetGb: 2,
-        dataSizeGb: 5,
+        workingSetGb: designChallenge.requirements.workingSetGb,
+        dataSizeGb: designChallenge.requirements.dataSizeGb,
         latencyP95Ms: settings.latencyP95Ms,
-        maxErrorRatio: 0.01,
-        availabilityRatio: 0.99,
+        maxErrorRatio: designChallenge.requirements.maxErrorRatio,
+        availabilityRatio: designChallenge.requirements.availabilityRatio ?? 0.99,
         monthlyBudgetUsd: settings.monthlyBudgetUsd,
       },
       loadProfile: [
@@ -123,16 +128,45 @@ export function SandboxPage() {
         { durationSec: 25, fromUsers: settings.targetUsers * 2, toUsers: settings.targetUsers * 2 },
       ],
     }),
-    [settings],
+    [designChallenge.requirements, settings],
   );
 
-  const patch = useCallback((key: keyof SandboxSettings, value: number) => {
-    setSettings((current) => ({ ...current, [key]: value }));
-  }, []);
+  const score = useMemo(
+    () =>
+      result
+        ? scoreAttempt({
+            requirements: config.requirements,
+            maxUsersSustained: result.maxUsersSustained,
+            monthlyCostUsd: result.monthlyCostUsd,
+            ...(result.availabilityRatio === undefined
+              ? {}
+              : { availabilityRatio: result.availabilityRatio }),
+          })
+        : null,
+    [config.requirements, result],
+  );
 
-  const handleDesignChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
-    setDesignId(event.target.value);
-  }, []);
+  const patch = useCallback(
+    (key: keyof SandboxSettings, value: number) => {
+      setSettings((current) => ({ ...current, [key]: value }));
+
+      if (!running) {
+        resetRun();
+      }
+    },
+    [resetRun, running],
+  );
+
+  const handleDesignChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setDesignId(event.target.value);
+
+      if (!running) {
+        resetRun();
+      }
+    },
+    [resetRun, running],
+  );
   const handleUsersChange = useCallback((value: number) => patch("targetUsers", value), [patch]);
   const handleRequestsChange = useCallback(
     (value: number) => patch("requestsPerUserPerSec", value),
@@ -194,6 +228,7 @@ export function SandboxPage() {
               id="sandbox-design"
               className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
               value={designId}
+              disabled={running}
               onChange={handleDesignChange}
             >
               {DESIGN_OPTIONS.map((option) => (
@@ -213,6 +248,7 @@ export function SandboxPage() {
             min={50}
             max={5_000}
             step={50}
+            disabled={running}
             onChange={handleUsersChange}
           />
           <SandboxSlider
@@ -223,6 +259,7 @@ export function SandboxPage() {
             max={8}
             step={0.2}
             suffix=" rps"
+            disabled={running}
             onChange={handleRequestsChange}
           />
           <SandboxSlider
@@ -233,6 +270,7 @@ export function SandboxPage() {
             max={100}
             step={5}
             suffix="%"
+            disabled={running}
             onChange={handleReadChange}
           />
           <SandboxSlider
@@ -243,6 +281,7 @@ export function SandboxPage() {
             max={100}
             step={5}
             suffix="%"
+            disabled={running}
             onChange={handleStaticChange}
           />
           <SandboxSlider
@@ -253,6 +292,7 @@ export function SandboxPage() {
             max={1_000}
             step={25}
             suffix=" ms"
+            disabled={running}
             onChange={handleLatencyChange}
           />
           <SandboxSlider
@@ -263,6 +303,7 @@ export function SandboxPage() {
             max={10_000}
             step={100}
             suffix=" USD"
+            disabled={running}
             onChange={handleBudgetChange}
           />
 
@@ -271,18 +312,32 @@ export function SandboxPage() {
             input and run again — nothing is saved to progress.
           </p>
 
-          {result ? (
-            <div className="rounded-lg border border-border/70 p-3 text-xs">
-              <p className="font-medium">
-                {result.outcome.status === "passed" ? "Passed" : "Failed"} at{" "}
-                {result.maxUsersSustained.toLocaleString("en-US")} users
-              </p>
-              <p className="mt-1 font-mono text-muted-foreground">
+          {result && score ? (
+            <div className="space-y-2 rounded-lg border border-border/70 p-3 text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium">
+                  {result.outcome.status === "passed" ? "Passed" : "Failed"} at{" "}
+                  {result.maxUsersSustained.toLocaleString("en-US")} users
+                </p>
+                <StarRating stars={score.stars} />
+              </div>
+              <p className="font-mono text-muted-foreground">
                 ${Math.round(result.monthlyCostUsd)}/mo ·{" "}
                 {result.availabilityRatio === undefined
                   ? "availability n/a"
                   : `${(result.availabilityRatio * 100).toFixed(2)}% available`}
               </p>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant={score.sloMet ? "secondary" : "destructive"}>
+                  {score.sloMet ? "Target met" : "Target missed"}
+                </Badge>
+                <Badge variant={score.withinBudget ? "secondary" : "destructive"}>
+                  {score.withinBudget ? "In budget" : "Over budget"}
+                </Badge>
+                <Badge variant={score.availabilityMet ? "secondary" : "destructive"}>
+                  {score.availabilityMet ? "Availability met" : "Availability missed"}
+                </Badge>
+              </div>
             </div>
           ) : null}
         </aside>

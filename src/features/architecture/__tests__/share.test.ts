@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { architectureSchema } from "../model/schema";
-import { decodeArchitecture, encodeArchitecture } from "../model/share";
+import { MAX_SHARE_PAYLOAD_LENGTH, decodeArchitecture, encodeArchitecture } from "../model/share";
 
 const architecture = architectureSchema.parse({
   schemaVersion: 1,
@@ -45,5 +45,9 @@ describe("architecture share links", () => {
     expect(decodeArchitecture("")).toBeNull();
     expect(decodeArchitecture("not-a-design")).toBeNull();
     expect(decodeArchitecture("e30")).toBeNull();
+  });
+
+  it("rejects oversized query payloads before decoding", () => {
+    expect(decodeArchitecture("a".repeat(MAX_SHARE_PAYLOAD_LENGTH + 1))).toBeNull();
   });
 });

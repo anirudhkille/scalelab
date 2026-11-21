@@ -23,10 +23,49 @@ const NO_EFFECT: FailureEffect = {
 
 function eventApplies(event: FailureEvent, node: ArchNode): boolean {
   if (event.kind === "azOutage") {
-    return event.zone === undefined || event.zone === node.zone;
+    return event.region === node.region && event.zone === node.zone;
   }
 
   return event.nodeId === node.id;
+}
+
+export type FailureScenarioIssue = {
+  readonly code: "missing-node" | "missing-zone";
+  readonly message: string;
+};
+
+/** Check that authored failure scenarios still target something in this design. */
+export function validateFailureScenarios(
+  nodes: readonly ArchNode[],
+  scenarios: readonly FailureEvent[],
+): readonly FailureScenarioIssue[] {
+  const issues: FailureScenarioIssue[] = [];
+
+  for (const [index, event] of scenarios.entries()) {
+    if (event.kind === "killNode" || event.kind === "slowNode") {
+      if (event.nodeId === undefined || !nodes.some((node) => node.id === event.nodeId)) {
+        issues.push({
+          code: "missing-node",
+          message: `Failure scenario ${index + 1} targets a component that is no longer in the design.`,
+        });
+      }
+
+      continue;
+    }
+
+    if (
+      event.region === undefined ||
+      event.zone === undefined ||
+      !nodes.some((node) => node.region === event.region && node.zone === event.zone)
+    ) {
+      issues.push({
+        code: "missing-zone",
+        message: `Failure scenario ${index + 1} targets an empty region/zone pair.`,
+      });
+    }
+  }
+
+  return issues;
 }
 
 /** Resolve every active failure for one node at this simulated time. */
