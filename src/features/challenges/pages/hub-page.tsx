@@ -33,10 +33,7 @@ export function HubPage() {
       />
 
       <section className="max-w-3xl">
-        <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          All phases · complete
-        </Badge>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
