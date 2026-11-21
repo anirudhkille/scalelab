@@ -26,8 +26,11 @@ fetch.
   metrics charts, and a failure overlay.
 - **M5 — challenges + reports**: five tuned challenges, requirements drawers,
   starter and reference designs, progressive hints, failure reports with
-  evidence and a p95 sparkline, three-star scoring, and session attempt history.
-- **Next**: M6 persistence and saved progress.
+  evidence and a p95 sparkline, and three-star scoring.
+- **M6 — persistence + saved progress**: versioned local storage for designs,
+  attempts, hints, and settings, corrupt-data backups, export/import/reset,
+  attempt comparison and design restore, plus streaks and concept tracking.
+- **Next**: M7 polish and launch.
 
 The workspace at `/challenge/:id` now runs a complete challenge loop: design,
 run, diagnose, and retry. The engine is also usable headlessly from
@@ -73,7 +76,7 @@ src/
 │  ├─ simulation/    engine, runner, pages
 │  ├─ playback/      live visualization (M4)
 │  ├─ diagnosis/     failure attribution rules and explanations
-│  ├─ progress/      attempts and scoring
+│  ├─ progress/      attempts, scoring, persistence, compare, export/import
 │  ├─ settings/      themes, preferences, persistence
 │  ├─ workspace/     workspace composition
 │  └─ learn/         concept cards
@@ -131,7 +134,21 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   sparkline, plain-English context, and progressive hints.
 - Stars reward surviving the target, staying within budget, and holding 2× the
   target. Attempts are grouped by challenge on the Progress page.
-- Attempt history is session-only until M6 adds local persistence.
+
+## Saved progress at a glance
+
+- Designs, attempts, unlocked hints, and settings persist in four versioned
+  local-storage slices under `scalelab:v1`.
+- Hydration is Zod-validated. Corrupt blobs are copied to a timestamped
+  `scalelab:v1:corrupt-*` key, then the app starts that slice fresh with a toast.
+- Storage writes are wrapped: quota and blocked-storage errors show a toast and
+  never crash the session.
+- The Progress page exports a validated JSON file containing settings and
+  progress, imports it back, or resets everything after confirmation.
+- Each attempt keeps its architecture snapshot, so the report and history can
+  compare the previous run and restore that design.
+- Progress also tracks best stars per challenge, completed challenges, practiced
+  concepts, and a consecutive-day streak.
 
 ## Engine at a glance
 

@@ -23,6 +23,7 @@ import {
 import { FailureReportDialog, diagnoseFailure, type FailureDiagnosis } from "@/features/diagnosis";
 import { LiveMetricsPanel, ParticleLayer } from "@/features/playback";
 import {
+  AttemptCompareDialog,
   ResultDialog,
   attemptFromResult,
   selectAttempts,
@@ -67,19 +68,37 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
   const history = useRunStore(selectRunHistory);
   const attempts = useAttemptStore(selectAttempts);
   const addAttempt = useAttemptStore((state) => state.addAttempt);
+  const saveDesign = useAttemptStore((state) => state.saveDesign);
+  const hintsUnlocked = useAttemptStore((state) => state.hintsUnlocked[challenge.id] ?? 0);
+  const setHintsUnlocked = useAttemptStore((state) => state.setHintsUnlocked);
   const { startRun, stopRun, setRunSpeed } = useRunSimulation();
   const simSpeed = useSettingsStore((state) => state.settings.simSpeed);
   const setSimSpeed = useSettingsStore((state) => state.setSimSpeed);
   const [report, setReport] = useState<RunReport | null>(null);
   const [dialog, setDialog] = useState<DialogKind>(null);
+  const [comparePair, setComparePair] = useState<{
+    readonly current: AttemptRecord;
+    readonly previous: AttemptRecord;
+  } | null>(null);
   const runArchitectureRef = useRef<Architecture>(architecture);
   const recordedResultRef = useRef<RunResult | null>(null);
 
   useState(() => {
-    loadArchitecture(starterArchitectureFor(challenge.id));
+    const savedDesign = useAttemptStore.getState().designs[challenge.id];
+    loadArchitecture(savedDesign ?? starterArchitectureFor(challenge.id));
     resetRun();
     return true;
   });
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      saveDesign(challenge.id, architecture);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [architecture, challenge.id, saveDesign]);
 
   const runConfig = useMemo(() => runConfigFor(challenge.id), [challenge.id]);
   const running = status === "running";
@@ -105,6 +124,46 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
       attempts.filter((attempt) => attempt.challengeId === challenge.id && attempt.stars === 0)
         .length,
     [attempts, challenge.id],
+  );
+
+  const previousAttempt = useMemo(() => {
+    const currentId = report?.attempt.id;
+
+    return attempts.find(
+      (attempt) => attempt.challengeId === challenge.id && attempt.id !== currentId,
+    );
+  }, [attempts, challenge.id, report?.attempt.id]);
+
+  const hintsShown = Math.min(hintsUnlocked, challenge.hints.length);
+
+  const handleNextHint = useCallback(() => {
+    setHintsUnlocked(challenge.id, Math.min(hintsShown + 1, challenge.hints.length));
+  }, [challenge.hints.length, challenge.id, hintsShown, setHintsUnlocked]);
+
+  const handleCompare = useCallback(() => {
+    if (!report || !previousAttempt) {
+      return;
+    }
+
+    setComparePair({ current: report.attempt, previous: previousAttempt });
+  }, [previousAttempt, report]);
+
+  const handleCompareOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setComparePair(null);
+    }
+  }, []);
+
+  const handleRestorePrevious = useCallback(
+    (attempt: AttemptRecord) => {
+      loadArchitecture(attempt.architecture);
+      saveDesign(attempt.challengeId, attempt.architecture);
+      resetRun();
+      setReport(null);
+      setDialog(null);
+      setComparePair(null);
+    },
+    [loadArchitecture, resetRun, saveDesign],
   );
 
   useEffect(() => {
@@ -171,11 +230,13 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
   }, []);
 
   const handleShowSampleSolution = useCallback(() => {
-    loadArchitecture(referenceArchitectureFor(challenge.id));
+    const reference = referenceArchitectureFor(challenge.id);
+    loadArchitecture(reference);
+    saveDesign(challenge.id, reference);
     resetRun();
     setReport(null);
     setDialog(null);
-  }, [challenge.id, loadArchitecture, resetRun]);
+  }, [challenge.id, loadArchitecture, resetRun, saveDesign]);
 
   useDesignShortcuts(!running);
 
@@ -228,6 +289,7 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
 
       {report?.diagnosis && failedOutcome ? (
         <FailureReportDialog
+          key={report.attempt.id}
           open={dialog === "failure"}
           challengeTitle={challenge.title}
           requirements={challenge.requirements}
@@ -236,12 +298,27 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
           finalStep={report.result.finalStep}
           history={history}
           hints={challenge.hints}
+          hintsShown={hintsShown}
           failedAttempts={failedAttempts}
           canShowSample={failedAttempts >= 3}
+          canCompare={previousAttempt !== undefined}
           onOpenChange={handleDialogOpenChange}
+          onShowNextHint={handleNextHint}
+          onCompare={handleCompare}
           onRunAgain={handleRun}
           onEditDesign={handleEditDesign}
           onShowSampleSolution={handleShowSampleSolution}
+        />
+      ) : null}
+
+      {comparePair ? (
+        <AttemptCompareDialog
+          open
+          challengeTitle={challenge.title}
+          current={comparePair.current}
+          previous={comparePair.previous}
+          onOpenChange={handleCompareOpenChange}
+          onRestorePrevious={handleRestorePrevious}
         />
       ) : null}
     </div>

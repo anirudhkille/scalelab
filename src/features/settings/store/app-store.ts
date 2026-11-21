@@ -1,9 +1,13 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+import { backupCorruptEntry, safeJSONStorage } from "@/shared/storage";
+
 import {
   persistedSettingsSchema,
+  settingsSchema,
   type ReducedMotionPreference,
   type Settings,
   type SimSpeed,
@@ -17,6 +21,8 @@ export type SettingsState = {
   setSimSpeed: (speed: SimSpeed) => void;
   setReducedMotion: (preference: ReducedMotionPreference) => void;
   toggleParticles: () => void;
+  replaceSettings: (settings: Settings) => void;
+  resetSettings: () => void;
 };
 
 type PersistedSettings = {
@@ -71,10 +77,29 @@ export const useSettingsStore = create<SettingsState>()(
           state.settings.particles = !state.settings.particles;
         });
       },
+
+      replaceSettings: (settings) => {
+        const parsed = settingsSchema.safeParse(settings);
+
+        if (!parsed.success) {
+          return;
+        }
+
+        set((state) => {
+          state.settings = parsed.data;
+        });
+      },
+
+      resetSettings: () => {
+        set((state) => {
+          state.settings = initialSettings;
+        });
+      },
     })),
     {
       name: STORAGE_KEY,
       version: 1,
+      storage: safeJSONStorage<PersistedSettings>(),
       partialize: (state): PersistedSettings => ({ settings: state.settings }),
 
       // Validate whatever is in localStorage before trusting it. Corrupt or
@@ -82,7 +107,17 @@ export const useSettingsStore = create<SettingsState>()(
       merge: (persistedState, currentState) => {
         const parsed = persistedSettingsSchema.safeParse(persistedState);
 
-        return parsed.success ? { ...currentState, settings: parsed.data.settings } : currentState;
+        if (parsed.success) {
+          return { ...currentState, settings: parsed.data.settings };
+        }
+
+        if (backupCorruptEntry(STORAGE_KEY)) {
+          toast.error("Saved settings were corrupt", {
+            description: "A backup was kept and ScaleLab restored the defaults.",
+          });
+        }
+
+        return currentState;
       },
 
       // Future schema changes migrate here. The current shape is v1.

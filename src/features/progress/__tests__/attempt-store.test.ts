@@ -26,7 +26,7 @@ function attempt(challengeId: string, timestamp: number, stars: 0 | 1 | 2 | 3 = 
 }
 
 beforeEach(() => {
-  useAttemptStore.getState().clearAttempts();
+  useAttemptStore.getState().resetProgress();
 });
 
 describe("useAttemptStore", () => {
@@ -77,5 +77,27 @@ describe("useAttemptStore", () => {
 
     expect(bestStarsForChallenge(records)).toBe(3);
     expect(bestStarsForChallenge([])).toBe(0);
+  });
+
+  it("saves designs and clears them on reset", () => {
+    const store = useAttemptStore.getState();
+    const challengeId = asChallengeId("personal-blog");
+
+    store.saveDesign(challengeId, ARCHITECTURE);
+    expect(useAttemptStore.getState().designs[challengeId]).toEqual(ARCHITECTURE);
+
+    store.resetProgress();
+    expect(useAttemptStore.getState().designs[challengeId]).toBeUndefined();
+  });
+
+  it("clamps unlocked hints to the hint count", () => {
+    const store = useAttemptStore.getState();
+    const challengeId = asChallengeId("personal-blog");
+
+    store.setHintsUnlocked(challengeId, 99);
+    expect(useAttemptStore.getState().hintsUnlocked[challengeId]).toBe(3);
+
+    store.setHintsUnlocked(challengeId, -4);
+    expect(useAttemptStore.getState().hintsUnlocked[challengeId]).toBe(0);
   });
 });

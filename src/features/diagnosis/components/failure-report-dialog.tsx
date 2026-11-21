@@ -1,5 +1,13 @@
 import { useCallback, useState } from "react";
-import { AlertTriangle, BookOpen, Lightbulb, RefreshCw, Sparkles, Wrench } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  GitCompareArrows,
+  Lightbulb,
+  RefreshCw,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
 
 import type { ChallengeRequirements } from "@/features/challenges";
 import type { RunChartSample, SimulationStep } from "@/features/simulation";
@@ -28,9 +36,13 @@ type FailureReportDialogProps = {
   readonly finalStep: SimulationStep;
   readonly history: readonly RunChartSample[];
   readonly hints: readonly string[];
+  readonly hintsShown: number;
   readonly failedAttempts: number;
   readonly canShowSample: boolean;
+  readonly canCompare: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  readonly onShowNextHint: () => void;
+  readonly onCompare: () => void;
   readonly onRunAgain: () => void;
   readonly onEditDesign: () => void;
   readonly onShowSampleSolution: () => void;
@@ -69,19 +81,18 @@ export function FailureReportDialog({
   finalStep,
   history,
   hints,
+  hintsShown,
   failedAttempts,
   canShowSample,
+  canCompare,
   onOpenChange,
+  onShowNextHint,
+  onCompare,
   onRunAgain,
   onEditDesign,
   onShowSampleSolution,
 }: FailureReportDialogProps) {
-  const [hintsShown, setHintsShown] = useState(0);
   const [confirmSample, setConfirmSample] = useState(false);
-
-  const handleNextHint = useCallback(() => {
-    setHintsShown((current) => current + 1);
-  }, []);
 
   const handleSampleAction = useCallback(() => {
     if (confirmSample) {
@@ -92,13 +103,24 @@ export function FailureReportDialog({
     setConfirmSample(true);
   }, [confirmSample, onShowSampleSolution]);
 
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setConfirmSample(false);
+      }
+
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
+
   const visibleHints = hints.slice(0, hintsShown);
   const canRevealHint = hintsShown < hints.length;
   const utilization = diagnosis.evidence.nodeUtilizationRatio;
   const queueDepth = diagnosis.evidence.queueDepth;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -192,7 +214,7 @@ export function FailureReportDialog({
           ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canRevealHint ? (
-              <Button variant="outline" size="sm" onClick={handleNextHint}>
+              <Button variant="outline" size="sm" onClick={onShowNextHint}>
                 <Lightbulb data-icon="inline-start" />
                 Show next hint
               </Button>
@@ -221,6 +243,12 @@ export function FailureReportDialog({
               Sample solution unlocks after 3 failed runs.
             </span>
           )}
+          {canCompare ? (
+            <Button variant="ghost" size="sm" onClick={onCompare}>
+              <GitCompareArrows data-icon="inline-start" />
+              Compare
+            </Button>
+          ) : null}
           <Button variant="outline" size="sm" onClick={onEditDesign}>
             <Wrench data-icon="inline-start" />
             Edit design

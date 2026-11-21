@@ -38,3 +38,25 @@ export const attemptRecordSchema = z.object({
 export type AttemptRecord = z.infer<typeof attemptRecordSchema>;
 
 export const attemptsSchema = z.array(attemptRecordSchema).readonly();
+
+export const MAX_HINTS_PER_CHALLENGE = 3;
+
+export const hintsUnlockedSchema = z.number().int().min(0).max(MAX_HINTS_PER_CHALLENGE);
+
+export const designMapSchema = z.record(challengeIdSchema, architectureSchema);
+
+export const hintsMapSchema = z.record(challengeIdSchema, hintsUnlockedSchema);
+
+export const progressDataSchema = z.object({
+  attempts: attemptsSchema,
+  designs: designMapSchema,
+  hintsUnlocked: hintsMapSchema,
+});
+
+export type ProgressData = z.infer<typeof progressDataSchema>;
+
+export const EMPTY_PROGRESS_DATA: ProgressData = {
+  attempts: [],
+  designs: {},
+  hintsUnlocked: {},
+};
