@@ -5,6 +5,7 @@ export * from "./health";
 export * from "./ids";
 export * from "./param-specs";
 export * from "./schema";
+export * from "./share";
 export * from "./summary";
 export * from "./traffic";
 export * from "./types";

@@ -28,6 +28,8 @@ function node<T extends NodeKind>(
     id: asNodeId(id),
     label: id,
     position: { x: 0, y: 0 },
+    region: "us-east",
+    zone: "a",
     params,
   };
 }
@@ -143,6 +145,7 @@ describe("diagnoseFailure", () => {
           memoryGb: 1,
           ttlSec: 300,
           evictionPolicy: "lru",
+          writeStrategy: "writeAround",
         }),
         node("db", "database"),
       ],

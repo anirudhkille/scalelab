@@ -17,6 +17,8 @@ function node(id: string, kind: NodeKind): ArchNode {
     id: asNodeId(id),
     label: kind,
     position: { x: 0, y: 0 },
+    region: "us-east",
+    zone: "a",
     params: defaultComponentParams(kind),
   };
 }
@@ -30,6 +32,8 @@ function withParams<T extends NodeKind>(
     id: asNodeId(id),
     label: kind,
     position: { x: 0, y: 0 },
+    region: "us-east",
+    zone: "a",
     params,
   };
 }

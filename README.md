@@ -33,8 +33,11 @@ fetch.
 - **M7 — polish + launch**: a three-step first-visit tour, keyboard shortcuts
   help, skip link and focus pass, reduced-motion-aware transitions, and
   launch-ready documentation.
-- **Next**: Phase 2 — failure injection, availability scoring, more challenges,
-  and concept cards.
+- **Phase 2 — resilience**: challenge failure scenarios (kill, degrade, zone
+  outage), availability tracking and scoring, cache write strategies, database
+  replication lag, and multi-region placement with cross-region latency.
+- **Phase 3 — scale**: a sandbox with arbitrary load sliders, shareable designs
+  encoded into the URL, and a concept-card library on `/learn`.
 
 The workspace at `/challenge/:id` now runs a complete challenge loop: design,
 run, diagnose, and retry. The engine is also usable headlessly from
@@ -167,6 +170,24 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   in-app reduced-motion setting.
 - The README and decisions log are part of the milestone: the shipped behavior,
   known approximations, and local-first constraints are documented together.
+
+## Resilience and scale at a glance
+
+- Challenges can inject node kills, degraded nodes, or availability-zone
+  outages. The runner applies the effect for a fixed window, then the failure
+  report explains what broke.
+- Availability is accrued across each run and feeds scoring alongside the target
+  load, budget, and 2× headroom.
+- Caches support write-around, write-through, and write-back. Async database
+  replicas add replication lag under write pressure.
+- Every node carries a region and zone; cross-region edges add latency and zone
+  outages only affect nodes in the targeted zone.
+- `/sandbox` runs a reference design against arbitrary users, request rate, read
+  and static mix, p95 SLO, and monthly budget.
+- The share button copies a URL with the current design encoded in the query
+  string. Opening it loads that exact design in the challenge workspace.
+- `/learn` ships the concept-card library for caching, CDNs, queues, workers,
+  replicas, sharding, rate limiting, backpressure, and multi-region design.
 
 ## Engine at a glance
 

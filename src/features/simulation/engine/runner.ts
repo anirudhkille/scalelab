@@ -14,6 +14,7 @@ import {
 import type { ChallengeRequirements } from "@/features/challenges";
 
 import {
+  CROSS_REGION_LATENCY_MS,
   DEFAULT_MAX_SIMULATED_SEC,
   ENGINE_DT_SEC,
   EPSILON_RPS,
@@ -21,6 +22,7 @@ import {
   SUCCESS_HOLD_SEC,
   TARGET_REACHED_RATIO,
 } from "./constants";
+import { applyFailureEffect, failureEffectFor } from "./failures";
 import { detectFailure } from "./failure";
 import { usersAtTime } from "./load-profile";
 import { databaseStorageExceeded } from "./nodes/database";
@@ -84,6 +86,7 @@ export function createSimulationEngine(
   const requirements = config.requirements;
   const dtSec = config.dtSec ?? ENGINE_DT_SEC;
   const maxSimulatedSec = config.maxSimulatedSec ?? DEFAULT_MAX_SIMULATED_SEC;
+  const failureScenarios = config.failureScenarios ?? [];
   const monthlyCost = graph.nodes.reduce((total, node) => total + monthlyCostUsd(node.params), 0);
   const storageExhaustedNodeIds = graph.nodes
     .filter(
@@ -111,6 +114,8 @@ export function createSimulationEngine(
   let activeFailureKey: string | null = null;
   let pendingBreach: FailureBreach | null = null;
   let lastStep: SimulationStep | null = null;
+  let elapsedSec = 0;
+  let availableSec = 0;
 
   function tick(): SimulationStep {
     const users = usersAtTime(config.loadProfile, timeSec);
@@ -143,16 +148,25 @@ export function createSimulationEngine(
 
       const incoming = incomingByNode.get(node.id) ?? { read: 0, write: 0, static: 0 };
       const behavior = nodeBehaviorFor(node.params.kind);
-      const result = behavior({
-        node,
-        incoming,
-        outgoingEdges: graph.outgoingById.get(node.id) ?? [],
-        upstreamNodes: upstreamNodesById.get(node.id) ?? [],
-        requirements,
-        timeSec,
-        dtSec,
-        queueDepth: queues.get(node.id) ?? 0,
-      });
+      const effect = failureEffectFor(node.id, graph.nodes, failureScenarios, timeSec);
+      const result = applyFailureEffect(
+        behavior({
+          node,
+          incoming,
+          outgoingEdges: graph.outgoingById.get(node.id) ?? [],
+          upstreamNodes: upstreamNodesById.get(node.id) ?? [],
+          requirements,
+          timeSec,
+          dtSec,
+          queueDepth: queues.get(node.id) ?? 0,
+        }),
+        trafficTotal(incoming),
+        effect,
+      );
+
+      const upstreamNodes = upstreamNodesById.get(node.id) ?? [];
+      const crossesRegion = upstreamNodes.some((upstream) => upstream.region !== node.region);
+      const crossRegionLatencyMs = crossesRegion ? CROSS_REGION_LATENCY_MS : 0;
 
       queues.set(node.id, result.queueDepth);
       nodes.push({
@@ -161,7 +175,7 @@ export function createSimulationEngine(
         queueDepth: result.queueDepth,
         servedRps: result.servedRps,
         droppedRps: result.droppedRps,
-        latencyMs: result.latencyMs,
+        latencyMs: result.latencyMs + crossRegionLatencyMs,
         ...(result.hitRatio === undefined ? {} : { hitRatio: result.hitRatio }),
       });
 
@@ -184,12 +198,18 @@ export function createSimulationEngine(
       rps: trafficTotal(edgeRates.get(edge.id) ?? ZERO_TRAFFIC),
     }));
 
-    const metrics = computeRunMetrics({
+    elapsedSec += dtSec;
+    const baseMetrics = computeRunMetrics({
       users,
       offeredRps,
       nodes,
       monthlyCostUsd: monthlyCost,
     });
+    if (baseMetrics.errorRatio <= requirements.maxErrorRatio) {
+      availableSec += dtSec;
+    }
+    const availabilityRatio = elapsedSec > 0 ? availableSec / elapsedSec : 1;
+    const metrics: RunMetrics = { ...baseMetrics, availabilityRatio };
 
     const step: SimulationStep = {
       timeSec,
@@ -306,6 +326,7 @@ export function createSimulationEngine(
         finalStep: lastStep,
         maxUsersSustained,
         monthlyCostUsd: monthlyCost,
+        availabilityRatio: elapsedSec > 0 ? availableSec / elapsedSec : 1,
       };
 
       return result;

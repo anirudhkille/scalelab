@@ -14,7 +14,16 @@ import {
   type Architecture,
   type ComponentParams,
 } from "../model/schema";
-import type { EdgeId, NodeId, NodeKind, Vec2 } from "../model/types";
+import {
+  DEFAULT_REGION,
+  DEFAULT_ZONE,
+  type EdgeId,
+  type NodeId,
+  type NodeKind,
+  type RegionId,
+  type Vec2,
+  type ZoneId,
+} from "../model/types";
 
 export type DesignSelection =
   | { readonly type: "node"; readonly id: NodeId }
@@ -33,6 +42,7 @@ export type DesignState = {
   commitHistory: (snapshot: Architecture) => void;
   updateNodeLabel: (id: NodeId, label: string) => boolean;
   updateNodeParams: (id: NodeId, params: ComponentParams) => boolean;
+  updateNodePlacement: (id: NodeId, region: RegionId, zone: ZoneId) => boolean;
   removeNode: (id: NodeId) => boolean;
   removeEdge: (id: EdgeId) => boolean;
   duplicateSelectedNode: () => NodeId | null;
@@ -94,6 +104,8 @@ export const useDesignStore = create<DesignState>()((set, get) => ({
       id: nextId,
       label,
       position: { x: position.x, y: position.y },
+      region: DEFAULT_REGION,
+      zone: DEFAULT_ZONE,
       params: defaultComponentParams(kind),
     };
 
@@ -202,6 +214,26 @@ export const useDesignStore = create<DesignState>()((set, get) => ({
         ...state.architecture,
         nodes: state.architecture.nodes.map((item) =>
           item.id === id ? Object.assign({}, item, { params: parsed.data }) : item,
+        ),
+      }),
+    );
+
+    return true;
+  },
+
+  updateNodePlacement: (id, region, zone) => {
+    const state = get();
+    const node = state.architecture.nodes.find((item) => item.id === id);
+
+    if (!node || (node.region === region && node.zone === zone)) {
+      return false;
+    }
+
+    set(
+      historyFor(state, {
+        ...state.architecture,
+        nodes: state.architecture.nodes.map((item) =>
+          item.id === id ? Object.assign({}, item, { region, zone }) : item,
         ),
       }),
     );

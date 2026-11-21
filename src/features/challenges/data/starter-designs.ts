@@ -22,6 +22,8 @@ function node(
     id: asNodeId(id),
     label,
     position: { x, y },
+    region: "us-east",
+    zone: "a",
     params,
   };
 }
@@ -61,7 +63,13 @@ function database(size: "small" | "medium" | "large" | "xlarge"): ComponentParam
 }
 
 function cache(memoryGb: number): ComponentParams {
-  return { kind: "cache", memoryGb, ttlSec: 300, evictionPolicy: "lru" };
+  return {
+    kind: "cache",
+    memoryGb,
+    ttlSec: 300,
+    evictionPolicy: "lru",
+    writeStrategy: "writeAround",
+  };
 }
 
 function queue(maxDepth: number, throughputRps: number): ComponentParams {

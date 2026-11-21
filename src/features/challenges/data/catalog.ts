@@ -1,10 +1,11 @@
-import type { NodeKind } from "@/features/architecture";
+import { asNodeId, type NodeKind } from "@/features/architecture";
 
 import {
   asChallengeId,
   challengeSchema,
   type Challenge,
   type ChallengeRequirements,
+  type FailureEvent,
   type LoadStage,
 } from "../schema";
 import { referenceArchitectureFor, starterArchitectureFor } from "./starter-designs";
@@ -18,6 +19,7 @@ type RawChallenge = {
   readonly requirements: ChallengeRequirements;
   readonly loadProfile: readonly LoadStage[];
   readonly allowedComponents: readonly NodeKind[];
+  readonly failureScenarios?: readonly FailureEvent[];
   readonly hints: readonly string[];
   readonly learningGoals: readonly string[];
 };
@@ -136,6 +138,15 @@ const RAW_CHALLENGES = [
       { durationSec: 75, fromUsers: 0, toUsers: 1_000 },
       { durationSec: 30, fromUsers: 1_000, toUsers: 1_000 },
     ],
+    failureScenarios: [
+      {
+        atSec: 70,
+        kind: "slowNode",
+        nodeId: asNodeId("photo-app"),
+        durationSec: 8,
+        severityRatio: 0.75,
+      },
+    ],
     allowedComponents: [
       "clients",
       "dns",
@@ -185,6 +196,15 @@ const RAW_CHALLENGES = [
       { durationSec: 20, fromUsers: 600, toUsers: 600 },
       { durationSec: 10, fromUsers: 600, toUsers: 800 },
       { durationSec: 20, fromUsers: 800, toUsers: 800 },
+    ],
+    failureScenarios: [
+      {
+        atSec: 42,
+        kind: "slowNode",
+        nodeId: asNodeId("chat-worker"),
+        durationSec: 8,
+        severityRatio: 0.65,
+      },
     ],
     allowedComponents: [
       "clients",

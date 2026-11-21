@@ -14,6 +14,10 @@ const WorkspacePage = lazy(() =>
   import("@/features/workspace").then((module) => ({ default: module.WorkspacePage })),
 );
 
+const SandboxPage = lazy(() =>
+  import("@/features/workspace").then((module) => ({ default: module.SandboxPage })),
+);
+
 const ProgressPage = lazy(() =>
   import("@/features/progress").then((module) => ({ default: module.ProgressPage })),
 );
@@ -33,6 +37,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HubPage /> },
       { path: "challenge/:id", element: <WorkspacePage /> },
+      { path: "sandbox", element: <SandboxPage /> },
       { path: "progress", element: <ProgressPage /> },
       { path: "learn", element: <LearnPage /> },
       { path: "dev/engine", element: <DevEnginePage /> },

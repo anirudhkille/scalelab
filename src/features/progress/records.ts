@@ -11,6 +11,8 @@ export type CreateAttemptInput = {
   readonly stars: AttemptStars;
   readonly sloMet: boolean;
   readonly withinBudget: boolean;
+  readonly availabilityRatio?: number;
+  readonly availabilityMet?: boolean;
   readonly architecture: Architecture;
   readonly failureSummary?: string;
   readonly timestamp?: number;
@@ -26,6 +28,10 @@ export function createAttempt(input: CreateAttemptInput): AttemptRecord {
     stars: input.stars,
     sloMet: input.sloMet,
     withinBudget: input.withinBudget,
+    ...(input.availabilityRatio === undefined
+      ? {}
+      : { availabilityRatio: input.availabilityRatio }),
+    ...(input.availabilityMet === undefined ? {} : { availabilityMet: input.availabilityMet }),
     architecture: input.architecture,
     ...(input.failureSummary === undefined ? {} : { failureSummary: input.failureSummary }),
   });
@@ -37,6 +43,7 @@ export type AttemptFromResultInput = {
   readonly requirements: ChallengeRequirements;
   readonly maxUsersSustained: number;
   readonly costUsd: number;
+  readonly availabilityRatio?: number;
   readonly failureSummary?: string;
   readonly timestamp?: number;
 };
@@ -51,6 +58,9 @@ export function attemptFromResult(input: AttemptFromResultInput): AttemptWithSco
     requirements: input.requirements,
     maxUsersSustained: input.maxUsersSustained,
     monthlyCostUsd: input.costUsd,
+    ...(input.availabilityRatio === undefined
+      ? {}
+      : { availabilityRatio: input.availabilityRatio }),
   });
 
   return {
@@ -61,6 +71,10 @@ export function attemptFromResult(input: AttemptFromResultInput): AttemptWithSco
       stars: score.stars,
       sloMet: score.sloMet,
       withinBudget: score.withinBudget,
+      availabilityMet: score.availabilityMet,
+      ...(input.availabilityRatio === undefined
+        ? {}
+        : { availabilityRatio: input.availabilityRatio }),
       architecture: input.architecture,
       ...(input.failureSummary === undefined ? {} : { failureSummary: input.failureSummary }),
       ...(input.timestamp === undefined ? {} : { timestamp: input.timestamp }),

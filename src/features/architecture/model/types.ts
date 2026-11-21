@@ -50,6 +50,21 @@ export const EVICTION_POLICIES = ["lru", "lfu", "random"] as const;
 
 export type EvictionPolicy = (typeof EVICTION_POLICIES)[number];
 
+export const CACHE_WRITE_STRATEGIES = ["writeAround", "writeThrough", "writeBack"] as const;
+
+export type CacheWriteStrategy = (typeof CACHE_WRITE_STRATEGIES)[number];
+
 export const REPLICATION_MODES = ["sync", "async"] as const;
 
 export type ReplicationMode = (typeof REPLICATION_MODES)[number];
+
+export const REGION_IDS = ["us-east", "eu-west", "ap-south"] as const;
+
+export type RegionId = (typeof REGION_IDS)[number];
+
+export const ZONE_IDS = ["a", "b", "c"] as const;
+
+export type ZoneId = (typeof ZONE_IDS)[number];
+
+export const DEFAULT_REGION: RegionId = "us-east";
+export const DEFAULT_ZONE: ZoneId = "a";

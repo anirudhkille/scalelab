@@ -1,11 +1,12 @@
 import { useCallback } from "react";
-import { BookOpen, LayoutGrid, LineChart } from "lucide-react";
+import { BookOpen, FlaskConical, LayoutGrid, LineChart } from "lucide-react";
 import { NavLink } from "react-router";
 
 import { cn } from "@/shared/lib/utils";
 
 const NAV_ITEMS = [
   { to: "/", label: "Challenges", icon: LayoutGrid, end: true },
+  { to: "/sandbox", label: "Sandbox", icon: FlaskConical, end: false },
   { to: "/progress", label: "Progress", icon: LineChart, end: false },
   { to: "/learn", label: "Learn", icon: BookOpen, end: false },
 ] as const;

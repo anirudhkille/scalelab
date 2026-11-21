@@ -133,6 +133,9 @@ export function ResultDialog({
           <Badge variant={score.headroomMet ? "secondary" : "outline"}>
             {score.headroomMet ? "2× headroom" : "No 2× headroom"}
           </Badge>
+          <Badge variant={score.availabilityMet ? "secondary" : "outline"}>
+            {score.availabilityMet ? "Availability met" : "Availability missed"}
+          </Badge>
         </div>
 
         <DialogFooter>

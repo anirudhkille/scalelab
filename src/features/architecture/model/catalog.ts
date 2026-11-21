@@ -71,7 +71,13 @@ export const COMPONENT_DEFAULTS = {
     baseLatencyMs: 30,
     statefulSessions: false,
   },
-  cache: { kind: "cache", memoryGb: 8, ttlSec: 300, evictionPolicy: "lru" },
+  cache: {
+    kind: "cache",
+    memoryGb: 8,
+    ttlSec: 300,
+    evictionPolicy: "lru",
+    writeStrategy: "writeAround",
+  },
   database: {
     kind: "database",
     instanceSize: "small",

@@ -149,6 +149,17 @@ export const COMPONENT_PARAM_SPECS = {
         { value: "random", label: "Random" },
       ],
     },
+    {
+      type: "select",
+      key: "writeStrategy",
+      label: "Write strategy",
+      options: [
+        { value: "writeAround", label: "Write around" },
+        { value: "writeThrough", label: "Write through" },
+        { value: "writeBack", label: "Write back" },
+      ],
+      hint: "Write-back absorbs writes in memory; write-through keeps the cache and store in sync.",
+    },
   ],
   database: [
     {

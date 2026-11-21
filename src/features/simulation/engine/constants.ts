@@ -105,6 +105,22 @@ export const WORKER_BASE_LATENCY_MS = 10;
 /** Stateful sessions behind a round-robin LB waste capacity on session affinity. */
 export const STATEFUL_SESSION_PENALTY_RATIO = 0.7;
 
+/** Failure injection: a slowed node keeps this share of its capacity. */
+export const SLOW_NODE_CAPACITY_RATIO = 0.35;
+export const SLOW_NODE_LATENCY_MS = 180;
+
+/** Write-back caches absorb writes and flush this share to the store each tick. */
+export const CACHE_WRITE_BACK_FLUSH_RATIO = 0.1;
+export const CACHE_WRITE_THROUGH_LATENCY_MS = 2;
+export const CACHE_WRITE_BACK_LATENCY_MS = 1;
+
+/** Async replicas trail the primary; reads pay a small staleness-aware latency. */
+export const DATABASE_ASYNC_REPLICATION_LAG_MS = 120;
+export const DATABASE_REPLICATION_LAG_PER_WRITE_MS = 0.02;
+
+/** Cross-region edges add this much network latency each way. */
+export const CROSS_REGION_LATENCY_MS = 45;
+
 /** Latencies for kinds that remain pass-through in the MVP. */
 export const PLACEHOLDER_LATENCY_MS = {
   dns: 20,

@@ -1,11 +1,14 @@
 import { z } from "zod";
 
 import {
+  CACHE_WRITE_STRATEGIES,
   DATABASE_INSTANCE_SIZES,
   EVICTION_POLICIES,
   LOAD_BALANCER_ALGORITHMS,
   NODE_KINDS,
+  REGION_IDS,
   REPLICATION_MODES,
+  ZONE_IDS,
   type EdgeId,
   type NodeId,
 } from "./types";
@@ -59,6 +62,7 @@ export const componentParamsSchema = z.discriminatedUnion("kind", [
     memoryGb: z.number().positive(),
     ttlSec: z.number().positive(),
     evictionPolicy: z.enum(EVICTION_POLICIES),
+    writeStrategy: z.enum(CACHE_WRITE_STRATEGIES).default("writeAround"),
   }),
   z.object({
     kind: z.literal("database"),
@@ -84,6 +88,8 @@ export const archNodeSchema = z.object({
   id: nodeIdSchema,
   label: z.string().min(1),
   position: vec2Schema,
+  region: z.enum(REGION_IDS).default("us-east"),
+  zone: z.enum(ZONE_IDS).default("a"),
   params: componentParamsSchema,
 });
 

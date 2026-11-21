@@ -31,6 +31,8 @@ export const attemptRecordSchema = z.object({
   stars: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
   sloMet: z.boolean(),
   withinBudget: z.boolean(),
+  availabilityRatio: z.number().min(0).max(1).optional(),
+  availabilityMet: z.boolean().optional(),
   architecture: architectureSchema,
   failureSummary: z.string().optional(),
 });

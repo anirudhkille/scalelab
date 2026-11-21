@@ -7,6 +7,9 @@ import {
   CACHE_HIT_RATIO_EXPONENT,
   CACHE_QUEUE_LIMIT_SEC,
   CACHE_WARMUP_SEC,
+  CACHE_WRITE_BACK_FLUSH_RATIO,
+  CACHE_WRITE_BACK_LATENCY_MS,
+  CACHE_WRITE_THROUGH_LATENCY_MS,
 } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";
 import type { NodeBehavior } from "../types";
@@ -69,12 +72,19 @@ export const cacheBehavior: NodeBehavior = (context) => {
   };
 
   const hitReadRps = accepted.read * hitRatio;
+  const writeForwardRatio = params.writeStrategy === "writeBack" ? CACHE_WRITE_BACK_FLUSH_RATIO : 1;
   const forwarded: TrafficRate = {
     read: accepted.read - hitReadRps,
-    write: accepted.write,
+    write: accepted.write * writeForwardRatio,
     static: accepted.static,
   };
   const { distribution, droppedRps } = distributeForwarded(forwarded, context.outgoingEdges);
+  const strategyLatencyMs =
+    params.writeStrategy === "writeThrough"
+      ? CACHE_WRITE_THROUGH_LATENCY_MS
+      : params.writeStrategy === "writeBack"
+        ? CACHE_WRITE_BACK_LATENCY_MS
+        : 0;
 
   return {
     outputs: distribution.flows,
@@ -83,7 +93,7 @@ export const cacheBehavior: NodeBehavior = (context) => {
     queueDepth: queue.queueDepth,
     maxQueueDepth: queue.maxQueueDepth,
     utilizationRatio: queue.utilizationRatio,
-    latencyMs: queue.latencyMs,
+    latencyMs: queue.latencyMs + strategyLatencyMs,
     capacityRps: queue.capacityRps,
     hitRatio,
   };

@@ -1,5 +1,5 @@
 import type { EdgeId, NodeId } from "@/features/architecture";
-import type { ChallengeRequirements, LoadStage } from "@/features/challenges";
+import type { ChallengeRequirements, FailureEvent, LoadStage } from "@/features/challenges";
 
 export type { LoadStage };
 
@@ -24,6 +24,8 @@ export type RunMetrics = {
   readonly p95LatencyMs: number;
   readonly maxUtilizationRatio: number;
   readonly monthlyCostUsd: number;
+  /** Fraction of elapsed time the system answered within the error budget. */
+  readonly availabilityRatio?: number;
 };
 
 export type EdgeSnapshot = {
@@ -65,6 +67,8 @@ export type SimulationConfig = {
   readonly dtSec?: number;
   /** Hard stop for a run so a broken design cannot loop forever. */
   readonly maxSimulatedSec?: number;
+  /** Timed failure injections applied during the run. */
+  readonly failureScenarios?: readonly FailureEvent[];
 };
 
 export type RunResult = {
@@ -72,4 +76,5 @@ export type RunResult = {
   readonly finalStep: SimulationStep;
   readonly maxUsersSustained: number;
   readonly monthlyCostUsd: number;
+  readonly availabilityRatio?: number;
 };

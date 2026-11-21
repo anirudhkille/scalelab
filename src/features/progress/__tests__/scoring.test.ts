@@ -25,6 +25,7 @@ describe("scoreAttempt", () => {
       sloMet: false,
       withinBudget: true,
       headroomMet: false,
+      availabilityMet: true,
     });
   });
 
@@ -44,6 +45,7 @@ describe("scoreAttempt", () => {
       sloMet: true,
       withinBudget: true,
       headroomMet: false,
+      availabilityMet: true,
     });
   });
 
@@ -55,6 +57,7 @@ describe("scoreAttempt", () => {
       sloMet: true,
       withinBudget: true,
       headroomMet: true,
+      availabilityMet: true,
     });
   });
 });

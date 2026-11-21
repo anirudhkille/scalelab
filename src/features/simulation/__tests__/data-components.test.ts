@@ -46,6 +46,8 @@ function node<T extends NodeKind>(
     id: asNodeId(id),
     label: kind,
     position: { x: 0, y: 0 },
+    region: "us-east",
+    zone: "a",
     params,
   };
 }
@@ -108,6 +110,7 @@ describe("cache behavior", () => {
       memoryGb: 8,
       ttlSec: 300,
       evictionPolicy: "lru",
+      writeStrategy: "writeAround",
     });
     const result = cacheBehavior(context(cache, { read: 1_000, write: 100, static: 50 }));
     const steadyHitRatio = cacheSteadyHitRatio(8, requirements.workingSetGb);
@@ -126,6 +129,7 @@ describe("cache behavior", () => {
       memoryGb: 8,
       ttlSec: 300,
       evictionPolicy: "lru",
+      writeStrategy: "writeAround",
     });
     const result = cacheBehavior(
       context(cache, { read: 1_000, write: 0, static: 0 }, { timeSec: 0 }),

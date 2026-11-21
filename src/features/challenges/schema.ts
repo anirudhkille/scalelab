@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import { NODE_KINDS, architectureSchema, nodeIdSchema, ratioSchema } from "@/features/architecture";
+import {
+  NODE_KINDS,
+  ZONE_IDS,
+  architectureSchema,
+  nodeIdSchema,
+  ratioSchema,
+} from "@/features/architecture";
 
 export type ChallengeId = string & { readonly __brand: "ChallengeId" };
 
@@ -28,7 +34,10 @@ export type LoadStage = z.infer<typeof loadStageSchema>;
 export const failureEventSchema = z.object({
   atSec: z.number().nonnegative(),
   kind: z.enum(["killNode", "slowNode", "azOutage"]),
+  durationSec: z.number().positive().default(15),
   nodeId: nodeIdSchema.optional(),
+  zone: z.enum(ZONE_IDS).optional(),
+  severityRatio: ratioSchema.optional(),
 });
 
 export type FailureEvent = z.infer<typeof failureEventSchema>;
@@ -52,6 +61,7 @@ export type ChallengeRequirements = z.infer<typeof challengeRequirementsSchema>;
 export type ChallengeRunConfig = {
   readonly requirements: ChallengeRequirements;
   readonly loadProfile: readonly LoadStage[];
+  readonly failureScenarios?: readonly FailureEvent[];
 };
 
 export const challengeDifficultySchema = z.union([

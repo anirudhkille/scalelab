@@ -3,14 +3,28 @@ import { Copy, Trash2 } from "lucide-react";
 
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Separator } from "@/shared/ui/separator";
 
 import { COMPONENT_CATALOG, monthlyCostUsd } from "../model/catalog";
 import { COMPONENT_PARAM_SPECS } from "../model/param-specs";
 import type { ArchNode, ComponentParams } from "../model/schema";
+import { REGION_IDS, ZONE_IDS, type RegionId, type ZoneId } from "../model/types";
 import { useDesignStore } from "../store/design-store";
 import { ComponentIcon } from "./component-icon";
 import { ParamField } from "./param-field";
+
+const REGION_OPTIONS = [
+  { value: "us-east", label: "US East" },
+  { value: "eu-west", label: "EU West" },
+  { value: "ap-south", label: "AP South" },
+] as const;
+
+const ZONE_OPTIONS = [
+  { value: "a", label: "Zone A" },
+  { value: "b", label: "Zone B" },
+  { value: "c", label: "Zone C" },
+] as const;
 
 type NodeInspectorProps = {
   readonly node: ArchNode;
@@ -19,6 +33,7 @@ type NodeInspectorProps = {
 export function NodeInspector({ node }: NodeInspectorProps) {
   const updateNodeLabel = useDesignStore((state) => state.updateNodeLabel);
   const updateNodeParams = useDesignStore((state) => state.updateNodeParams);
+  const updateNodePlacement = useDesignStore((state) => state.updateNodePlacement);
   const removeNode = useDesignStore((state) => state.removeNode);
   const duplicateSelectedNode = useDesignStore((state) => state.duplicateSelectedNode);
   const [label, setLabel] = useState(node.label);
@@ -57,6 +72,24 @@ export function NodeInspector({ node }: NodeInspectorProps) {
       }
     },
     [node.label],
+  );
+
+  const handleRegionChange = useCallback(
+    (value: unknown) => {
+      if (typeof value !== "string") return;
+      if (!(REGION_IDS as readonly string[]).includes(value)) return;
+      updateNodePlacement(node.id, value as RegionId, node.zone);
+    },
+    [node.id, node.zone, updateNodePlacement],
+  );
+
+  const handleZoneChange = useCallback(
+    (value: unknown) => {
+      if (typeof value !== "string") return;
+      if (!(ZONE_IDS as readonly string[]).includes(value)) return;
+      updateNodePlacement(node.id, node.region, value as ZoneId);
+    },
+    [node.id, node.region, updateNodePlacement],
   );
 
   const handleDuplicate = useCallback(() => {
@@ -99,6 +132,39 @@ export function NodeInspector({ node }: NodeInspectorProps) {
           onBlur={handleLabelBlur}
           onKeyDown={handleLabelKeyDown}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <span className="text-xs font-medium">Region</span>
+          <Select items={REGION_OPTIONS} value={node.region} onValueChange={handleRegionChange}>
+            <SelectTrigger size="sm" className="w-full" aria-label="Node region">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {REGION_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <span className="text-xs font-medium">Zone</span>
+          <Select items={ZONE_OPTIONS} value={node.zone} onValueChange={handleZoneChange}>
+            <SelectTrigger size="sm" className="w-full" aria-label="Node availability zone">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ZONE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {fields.length > 0 ? (

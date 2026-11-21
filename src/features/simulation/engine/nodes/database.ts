@@ -5,11 +5,13 @@ import {
 } from "@/features/architecture/model";
 
 import {
+  DATABASE_ASYNC_REPLICATION_LAG_MS,
   DATABASE_BASE_LATENCY_MS,
   DATABASE_CAPACITY_RPS,
   DATABASE_CONTENTION_LATENCY_MS,
   DATABASE_HOT_SHARD_SKEW_RATIO,
   DATABASE_QUEUE_LIMIT_SEC,
+  DATABASE_REPLICATION_LAG_PER_WRITE_MS,
   DATABASE_REPLICATION_WRITE_FACTOR,
   DATABASE_STORAGE_GB,
 } from "../constants";
@@ -56,6 +58,15 @@ export function databaseCapacities(params: DatabaseParams): DatabaseCapacities {
     tier.write * shardCapacityMultiplier * DATABASE_REPLICATION_WRITE_FACTOR[params.replication];
 
   return { readRps, writeRps, shardCapacityMultiplier };
+}
+
+/** Async replicas lag behind the primary; sync replicas acknowledge before returning. */
+export function databaseReplicationLagMs(params: DatabaseParams, writeRps: number): number {
+  if (params.replication === "sync" || writeRps <= 0) {
+    return 0;
+  }
+
+  return DATABASE_ASYNC_REPLICATION_LAG_MS + writeRps * DATABASE_REPLICATION_LAG_PER_WRITE_MS;
 }
 
 export function databaseStorageLimitGb(params: DatabaseParams): number {
@@ -114,6 +125,8 @@ export const databaseBehavior: NodeBehavior = (context) => {
   );
 
   const contentionMs = DATABASE_CONTENTION_LATENCY_MS * Math.pow(queue.utilizationRatio, 4);
+  const replicationLagMs = databaseReplicationLagMs(context.node.params, context.incoming.write);
+  const readLagMs = context.incoming.read > 0 ? replicationLagMs : 0;
 
   return {
     outputs: distribution.flows,
@@ -122,7 +135,7 @@ export const databaseBehavior: NodeBehavior = (context) => {
     queueDepth: queue.queueDepth,
     maxQueueDepth: queue.maxQueueDepth,
     utilizationRatio: queue.utilizationRatio,
-    latencyMs: queue.latencyMs + contentionMs,
+    latencyMs: queue.latencyMs + contentionMs + readLagMs,
     capacityRps: queue.capacityRps,
   };
 };

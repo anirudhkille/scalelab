@@ -46,6 +46,7 @@ export {
   type ComponentParams,
   type ComponentParamsByKind,
 } from "./model/schema";
+export { decodeArchitecture, encodeArchitecture } from "./model/share";
 export { componentSummary } from "./model/summary";
 export {
   ZERO_TRAFFIC,
@@ -59,22 +60,30 @@ export {
   trafficTotal,
 } from "./model/traffic";
 export {
+  CACHE_WRITE_STRATEGIES,
   DATABASE_INSTANCE_SIZES,
+  DEFAULT_REGION,
+  DEFAULT_ZONE,
   EVICTION_POLICIES,
   LOAD_BALANCER_ALGORITHMS,
   NODE_KINDS,
+  REGION_IDS,
   REPLICATION_MODES,
+  ZONE_IDS,
   isNodeKind,
+  type CacheWriteStrategy,
   type DatabaseInstanceSize,
   type EdgeId,
   type EvictionPolicy,
   type LoadBalancerAlgorithm,
   type NodeId,
   type NodeKind,
+  type RegionId,
   type ReplicationMode,
   type TrafficClass,
   type TrafficRate,
   type Vec2,
+  type ZoneId,
 } from "./model/types";
 export {
   selectArchitecture,

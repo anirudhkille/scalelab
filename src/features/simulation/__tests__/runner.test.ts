@@ -21,6 +21,8 @@ function node<T extends NodeKind>(
     id: asNodeId(id),
     label: kind,
     position: { x: 0, y: 0 },
+    region: "us-east",
+    zone: "a",
     params,
   };
 }

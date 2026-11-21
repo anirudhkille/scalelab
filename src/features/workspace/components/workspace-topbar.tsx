@@ -6,12 +6,15 @@ import {
   Play,
   Redo2,
   RotateCcw,
+  Share2,
   Square,
   Undo2,
 } from "lucide-react";
 import { Link } from "react-router";
+import { toast } from "sonner";
 
 import {
+  encodeArchitecture,
   formatGraphIssue,
   selectArchitecture,
   selectCanRedo,
@@ -76,6 +79,20 @@ export function WorkspaceTopbar({
   const firstIssue = validation.ok ? null : validation.issues[0];
   const running = status === "running";
   const hasFinished = status === "passed" || status === "failed" || status === "stopped";
+  const handleShare = useCallback(async () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("design", encodeArchitecture(architecture));
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      toast.success("Share link copied", {
+        description: "Anyone with the link can open this exact design.",
+      });
+    } catch {
+      toast.error("Could not copy the share link");
+    }
+  }, [architecture]);
+
   const handleSpeedChange = useCallback(
     (value: string | null) => {
       if (value === null) {
@@ -143,6 +160,17 @@ export function WorkspaceTopbar({
           onClick={redo}
         >
           <Redo2 />
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Copy share link"
+          title="Copy share link"
+          onClick={handleShare}
+        >
+          <Share2 />
         </Button>
 
         <div className="flex items-center gap-1.5">

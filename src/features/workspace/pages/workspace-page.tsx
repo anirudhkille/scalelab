@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 
 import {
   ArchitectureCanvas,
   ComponentPalette,
   InspectorPanel,
+  decodeArchitecture,
   selectArchitecture,
   useDesignShortcuts,
   useDesignStore,
@@ -59,6 +60,7 @@ type WorkspaceEditorProps = {
 
 function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
   const challenge = useMemo(() => challengeOrFallback(challengeId), [challengeId]);
+  const [searchParams] = useSearchParams();
   const architecture = useDesignStore(selectArchitecture);
   const loadArchitecture = useDesignStore((state) => state.loadArchitecture);
   const resetRun = useRunStore((state) => state.resetRun);
@@ -84,8 +86,9 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
   const recordedResultRef = useRef<RunResult | null>(null);
 
   useState(() => {
+    const sharedDesign = decodeArchitecture(searchParams.get("design") ?? "");
     const savedDesign = useAttemptStore.getState().designs[challenge.id];
-    loadArchitecture(savedDesign ?? starterArchitectureFor(challenge.id));
+    loadArchitecture(sharedDesign ?? savedDesign ?? starterArchitectureFor(challenge.id));
     resetRun();
     return true;
   });
@@ -183,6 +186,9 @@ function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
       requirements: challenge.requirements,
       maxUsersSustained: result.maxUsersSustained,
       costUsd: result.monthlyCostUsd,
+      ...(result.availabilityRatio === undefined
+        ? {}
+        : { availabilityRatio: result.availabilityRatio }),
       ...(diagnosis === null ? {} : { failureSummary: diagnosis.headline }),
     });
 

@@ -7,5 +7,6 @@ export function runConfigFor(challengeId: string): ChallengeRunConfig {
   return {
     requirements: challenge.requirements,
     loadProfile: challenge.loadProfile,
+    ...(challenge.failureScenarios ? { failureScenarios: challenge.failureScenarios } : {}),
   };
 }

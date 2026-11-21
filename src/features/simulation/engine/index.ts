@@ -11,11 +11,13 @@ export {
   TARGET_REACHED_RATIO,
 } from "./constants";
 export { detectFailure, type FailureInput } from "./failure";
+export { applyFailureEffect, failureEffectFor, type FailureEffect } from "./failures";
 export { loadProfileDurationSec, usersAtTime } from "./load-profile";
 export { computeRunMetrics, type MetricsInput } from "./metrics";
 export { cacheHitRatioAtTime, cacheSteadyHitRatio } from "./nodes/cache";
 export {
   databaseCapacities,
+  databaseReplicationLagMs,
   databaseStorageExceeded,
   databaseStorageLimitGb,
   hotShardCapacityMultiplier,

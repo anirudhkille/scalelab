@@ -168,6 +168,48 @@ export function RequirementsSheet({ challenge }: { readonly challenge: Challenge
             </ol>
           </section>
 
+          {challenge.failureScenarios && challenge.failureScenarios.length > 0 ? (
+            <>
+              <Separator />
+              <section>
+                <h3 className="text-xs font-semibold tracking-wider uppercase">
+                  Failure scenarios
+                </h3>
+                <ul className="mt-3 space-y-2">
+                  {challenge.failureScenarios.map((failure) => {
+                    const target =
+                      failure.nodeId === undefined
+                        ? failure.zone
+                          ? `Zone ${failure.zone.toUpperCase()}`
+                          : "All nodes"
+                        : (challenge.starterArchitecture?.nodes.find(
+                            (node) => node.id === failure.nodeId,
+                          )?.label ?? failure.nodeId);
+
+                    return (
+                      <li
+                        key={`${failure.atSec}-${failure.kind}-${target}`}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border/70 px-3 py-2 text-xs"
+                      >
+                        <span className="text-muted-foreground">
+                          {failure.kind === "killNode"
+                            ? "Node killed"
+                            : failure.kind === "slowNode"
+                              ? "Node degraded"
+                              : "Zone outage"}
+                        </span>
+                        <span className="truncate font-mono">{target}</span>
+                        <span className="shrink-0 font-mono text-muted-foreground">
+                          {failure.atSec}s · {failure.durationSec}s
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            </>
+          ) : null}
+
           <Separator />
 
           <section>
