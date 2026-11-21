@@ -1,4 +1,4 @@
-import { CHALLENGES } from "@/features/challenges";
+import { CHALLENGES, type Challenge } from "@/features/challenges";
 
 import type { AttemptRecord } from "./schema";
 import { bestStarsForChallenge } from "./store/attempt-store";
@@ -65,8 +65,11 @@ export function streakDaysFromAttempts(attempts: readonly AttemptRecord[]): numb
   return streak;
 }
 
-export function summarizeProgress(attempts: readonly AttemptRecord[]): ProgressSummary {
-  const byChallenge: ChallengeProgress[] = CHALLENGES.map((challenge) => {
+export function summarizeProgress(
+  attempts: readonly AttemptRecord[],
+  challenges: readonly Challenge[] = CHALLENGES,
+): ProgressSummary {
+  const byChallenge: ChallengeProgress[] = challenges.map((challenge) => {
     const challengeAttempts = attempts.filter((attempt) => attempt.challengeId === challenge.id);
 
     return {
@@ -81,15 +84,15 @@ export function summarizeProgress(attempts: readonly AttemptRecord[]): ProgressS
   const attemptedIds = new Set(attempted.map((entry) => entry.challengeId));
   const concepts = [
     ...new Set(
-      CHALLENGES.filter((challenge) => attemptedIds.has(challenge.id)).flatMap(
-        (challenge) => challenge.concepts,
-      ),
+      challenges
+        .filter((challenge) => attemptedIds.has(challenge.id))
+        .flatMap((challenge) => challenge.concepts),
     ),
   ];
 
   return {
     totalStars: attempted.reduce((total, entry) => total + entry.bestStars, 0),
-    maxStars: CHALLENGES.length * 3,
+    maxStars: challenges.length * 3,
     attemptedChallenges: attempted.length,
     completedChallenges: attempted.filter((entry) => entry.bestStars >= 2).length,
     streakDays: streakDaysFromAttempts(attempts),

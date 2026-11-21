@@ -3,7 +3,13 @@ import { Link, useNavigate } from "react-router";
 import { ArrowRight, Download, LineChart, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-import { CHALLENGES, difficultyLabel } from "@/features/challenges";
+import {
+  CHALLENGES,
+  customChallengeToChallenge,
+  difficultyLabel,
+  selectCustomChallenges,
+  useCustomChallengeStore,
+} from "@/features/challenges";
 import { useSettingsStore } from "@/features/settings";
 import { PageMeta } from "@/shared/seo";
 import { Badge } from "@/shared/ui/badge";
@@ -39,6 +45,7 @@ type ComparePair = {
 
 export function ProgressPage() {
   const attempts = useAttemptStore(selectAttempts);
+  const customChallenges = useCustomChallengeStore(selectCustomChallenges);
   const replaceProgress = useAttemptStore((state) => state.replaceProgress);
   const resetProgress = useAttemptStore((state) => state.resetProgress);
   const saveDesign = useAttemptStore((state) => state.saveDesign);
@@ -49,23 +56,32 @@ export function ProgressPage() {
   const [compare, setCompare] = useState<ComparePair | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const summary = useMemo(() => summarizeProgress(attempts), [attempts]);
+  const allChallenges = useMemo(
+    () => [...CHALLENGES, ...customChallenges.map((custom) => customChallengeToChallenge(custom))],
+    [customChallenges],
+  );
+  const summary = useMemo(
+    () => summarizeProgress(attempts, allChallenges),
+    [allChallenges, attempts],
+  );
 
   const groups = useMemo(
     () =>
-      CHALLENGES.map((challenge) => {
-        const challengeAttempts = attempts.filter(
-          (attempt) => attempt.challengeId === challenge.id,
-        );
+      allChallenges
+        .map((challenge) => {
+          const challengeAttempts = attempts.filter(
+            (attempt) => attempt.challengeId === challenge.id,
+          );
 
-        return {
-          challenge,
-          attempts: challengeAttempts.slice(0, 5),
-          total: challengeAttempts.length,
-          bestStars: bestStarsForChallenge(challengeAttempts),
-        };
-      }).filter((group) => group.total > 0),
-    [attempts],
+          return {
+            challenge,
+            attempts: challengeAttempts.slice(0, 5),
+            total: challengeAttempts.length,
+            bestStars: bestStarsForChallenge(challengeAttempts),
+          };
+        })
+        .filter((group) => group.total > 0),
+    [allChallenges, attempts],
   );
 
   const handleExport = useCallback(() => {

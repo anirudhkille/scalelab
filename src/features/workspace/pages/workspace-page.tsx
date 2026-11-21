@@ -17,9 +17,12 @@ import {
 } from "@/features/architecture";
 import {
   challengeFor,
+  customChallengeToChallenge,
   referenceArchitectureFor,
-  runConfigFor,
+  runConfigForChallenge,
+  selectCustomChallenges,
   starterArchitectureFor,
+  useCustomChallengeStore,
   type Challenge,
 } from "@/features/challenges";
 import { FailureReportDialog, diagnoseFailure, type FailureDiagnosis } from "@/features/diagnosis";
@@ -90,7 +93,12 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   useState(() => {
     const sharedDesign = decodeArchitecture(searchParams.get("design") ?? "");
     const savedDesign = useAttemptStore.getState().designs[challenge.id];
-    loadArchitecture(sharedDesign ?? savedDesign ?? starterArchitectureFor(challenge.id));
+    loadArchitecture(
+      sharedDesign ??
+        savedDesign ??
+        challenge.starterArchitecture ??
+        starterArchitectureFor(challenge.id),
+    );
     resetRun();
     return true;
   });
@@ -105,7 +113,7 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
     };
   }, [architecture, challenge.id, saveDesign]);
 
-  const runConfig = useMemo(() => runConfigFor(challenge.id), [challenge.id]);
+  const runConfig = useMemo(() => runConfigForChallenge(challenge), [challenge]);
   const scenarioIssues = useMemo(
     () => validateFailureScenarios(architecture.nodes, runConfig.failureScenarios ?? []),
     [architecture.nodes, runConfig.failureScenarios],
@@ -246,13 +254,13 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   }, []);
 
   const handleShowSampleSolution = useCallback(() => {
-    const reference = referenceArchitectureFor(challenge.id);
+    const reference = challenge.referenceSolution ?? referenceArchitectureFor(challenge.id);
     loadArchitecture(reference);
     saveDesign(challenge.id, reference);
     resetRun();
     setReport(null);
     setDialog(null);
-  }, [challenge.id, loadArchitecture, resetRun, saveDesign]);
+  }, [challenge.id, challenge.referenceSolution, loadArchitecture, resetRun, saveDesign]);
 
   useDesignShortcuts(!running);
 
@@ -351,7 +359,17 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
 
 export function WorkspacePage() {
   const { id = "unknown" } = useParams();
-  const challenge = challengeFor(id);
+  const customChallenges = useCustomChallengeStore(selectCustomChallenges);
+  const challenge = useMemo(() => {
+    const builtIn = challengeFor(id);
+
+    if (builtIn) {
+      return builtIn;
+    }
+
+    const custom = customChallenges.find((item) => item.id === id);
+    return custom ? customChallengeToChallenge(custom) : null;
+  }, [customChallenges, id]);
 
   if (!challenge) {
     return <Navigate to="/" replace />;

@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, FlaskConical, Layers } from "lucide-react";
+import { ArrowRight, BookOpen, FlaskConical, Wrench } from "lucide-react";
 import { Link } from "react-router";
 
 import { PageMeta } from "@/shared/seo";
@@ -8,18 +8,18 @@ import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
 import { ChallengeCard } from "../components/challenge-card";
 import { CHALLENGES } from "../data/catalog";
 
-const ROADMAP = [
+const EXPLORE = [
   {
-    icon: BookOpen,
-    title: "Challenges 6–9",
-    milestone: "Phase 3",
-    body: "Search, video, analytics, and IoT pipelines — more traffic shapes and more failure modes.",
+    icon: Wrench,
+    title: "Custom challenge editor",
+    milestone: "Authoring",
+    body: "Pick a base design, tune the requirements and load profile, then save it locally or import JSON.",
   },
   {
-    icon: Layers,
-    title: "Custom challenge editor",
-    milestone: "Phase 3",
-    body: "Author your own requirements, load profile, and starter design, then import it as JSON.",
+    icon: BookOpen,
+    title: "Sandbox + concept library",
+    milestone: "Practice",
+    body: "Run arbitrary load shapes against a reference design, then read the concepts behind the bottleneck.",
   },
 ] as const satisfies readonly RoadmapItem[];
 
@@ -34,7 +34,7 @@ export function HubPage() {
 
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Resilience + scale · Phase 2/3
+          All phases · complete
         </Badge>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
@@ -55,6 +55,10 @@ export function HubPage() {
           >
             Try the flash sale
           </Button>
+          <Button nativeButton={false} render={<Link to="/custom" />} variant="outline">
+            <Wrench className="size-4" aria-hidden="true" />
+            Build a custom challenge
+          </Button>
           <Button nativeButton={false} render={<Link to="/sandbox" />} variant="outline">
             <FlaskConical className="size-4" aria-hidden="true" />
             Open sandbox
@@ -72,8 +76,8 @@ export function HubPage() {
               Challenges
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Five systems, from a static portfolio to a flash sale. Each one has a different
-              bottleneck waiting for you — and later challenges inject failures mid-run.
+              Nine systems, from a static portfolio to a rate-limited public API. Each one has a
+              different bottleneck waiting for you, and later challenges inject failures mid-run.
             </p>
           </div>
           <Badge variant="secondary">{CHALLENGES.length} challenges</Badge>
@@ -86,16 +90,16 @@ export function HubPage() {
         </div>
       </section>
 
-      <section className="mt-12" aria-labelledby="roadmap-heading">
-        <h2 id="roadmap-heading" className="text-sm font-semibold tracking-wider uppercase">
-          What comes next
+      <section className="mt-12" aria-labelledby="explore-heading">
+        <h2 id="explore-heading" className="text-sm font-semibold tracking-wider uppercase">
+          Keep exploring
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Failure injection, multi-region placement, the sandbox, share links, and concept cards are
-          live. Next: more scenarios and authoring.
+          Failure injection, multi-region placement, the sandbox, share links, concept cards, and
+          custom challenges are all live.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {ROADMAP.map((item) => (
+          {EXPLORE.map((item) => (
             <RoadmapCard key={item.title} item={item} />
           ))}
         </div>

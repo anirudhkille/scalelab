@@ -1,12 +1,14 @@
-import type { ChallengeRunConfig } from "../schema";
+import type { Challenge, ChallengeRunConfig } from "../schema";
 import { challengeOrFallback } from "./catalog";
 
-export function runConfigFor(challengeId: string): ChallengeRunConfig {
-  const challenge = challengeOrFallback(challengeId);
-
+export function runConfigForChallenge(challenge: Challenge): ChallengeRunConfig {
   return {
     requirements: challenge.requirements,
     loadProfile: challenge.loadProfile,
     ...(challenge.failureScenarios ? { failureScenarios: challenge.failureScenarios } : {}),
   };
+}
+
+export function runConfigFor(challengeId: string): ChallengeRunConfig {
+  return runConfigForChallenge(challengeOrFallback(challengeId));
 }

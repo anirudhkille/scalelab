@@ -34,7 +34,7 @@ describe("progress stats", () => {
     const summary = summarizeProgress(records);
 
     expect(summary.totalStars).toBe(3);
-    expect(summary.maxStars).toBe(15);
+    expect(summary.maxStars).toBe(27);
     expect(summary.attemptedChallenges).toBe(2);
     expect(summary.completedChallenges).toBe(1);
     expect(summary.concepts.length).toBeGreaterThan(0);

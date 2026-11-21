@@ -36,8 +36,10 @@ fetch.
 - **Phase 2 — resilience**: challenge failure scenarios (kill, degrade, zone
   outage), availability tracking and scoring, cache write strategies, database
   replication lag, and multi-region placement with cross-region latency.
-- **Phase 3 — scale**: a sandbox with arbitrary load sliders, shareable designs
-  encoded into the URL, and a concept-card library on `/learn`.
+- **Phase 3 — scale**: nine challenges including ride hailing, video streaming,
+  timeline fan-out, and a rate-limited API; a sandbox with arbitrary load
+  sliders; a custom challenge editor with JSON import; shareable designs encoded
+  into the URL; and a concept-card library on `/learn`.
 - **SEO + sharing**: canonical URLs, per-route titles and descriptions, Open
   Graph and Twitter cards, a 1200×630 social image, and `robots.txt`/`sitemap.xml`.
 
@@ -81,7 +83,7 @@ src/
 ├─ app/            composition root: providers, router, layouts, fallback pages
 ├─ features/
 │  ├─ architecture/  model, design store, canvas, palette, inspector, validation
-│  ├─ challenges/    challenge schemas and hub page
+│  ├─ challenges/    catalog, custom editor, schemas, hub page
 │  ├─ simulation/    engine, runner, pages
 │  ├─ playback/      live visualization (M4)
 │  ├─ diagnosis/     failure attribution rules and explanations
@@ -134,9 +136,10 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
 
 ## Challenges and reports at a glance
 
-- Five challenges cover static-heavy, read-heavy, media, bursty-write, and
-  flash-sale traffic. Each ships a starter design, a reference solution, and
-  numbers tuned against the engine.
+- Nine challenges cover static-heavy, read-heavy, media, bursty-write, flash-sale,
+  hot-location writes, video bandwidth, timeline fan-out, and rate-limited API
+  traffic. Each ships a starter design, a reference solution, and numbers tuned
+  against the engine.
 - The requirements drawer shows traffic shape, load stages, budget, SLOs, hints,
   and allowed components.
 - A failed run opens a report with the bottleneck, evidence, a 10-second p95
@@ -146,8 +149,8 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
 
 ## Saved progress at a glance
 
-- Designs, attempts, unlocked hints, and settings persist in four versioned
-  local-storage slices under `scalelab:v1`.
+- Designs, attempts, unlocked hints, custom challenges, and settings persist in
+  versioned local-storage slices under `scalelab:v1`.
 - Hydration is Zod-validated. Corrupt blobs are copied to a timestamped
   `scalelab:v1:corrupt-*` key, then the app starts that slice fresh with a toast.
 - Storage writes are wrapped: quota and blocked-storage errors show a toast and
@@ -190,6 +193,9 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   string. Opening it loads that exact design in the challenge workspace.
 - `/learn` ships the concept-card library for caching, CDNs, queues, workers,
   replicas, sharding, rate limiting, backpressure, and multi-region design.
+- `/custom` builds a challenge from any reference design with its own traffic,
+  SLO, budget, and load profile, or imports one as validated JSON. Custom
+  challenges stay local and appear in Progress alongside built-ins.
 
 ## Sharing and metadata at a glance
 

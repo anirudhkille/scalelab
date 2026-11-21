@@ -52,12 +52,16 @@ function appServer(instances: number): ComponentParams {
   };
 }
 
-function database(size: "small" | "medium" | "large" | "xlarge"): ComponentParams {
+function database(
+  size: "small" | "medium" | "large" | "xlarge",
+  readReplicas = 0,
+  shards = 1,
+): ComponentParams {
   return {
     kind: "database",
     instanceSize: size,
-    readReplicas: 0,
-    shards: 1,
+    readReplicas,
+    shards,
     replication: "async",
   };
 }
@@ -70,6 +74,18 @@ function cache(memoryGb: number): ComponentParams {
     evictionPolicy: "lru",
     writeStrategy: "writeAround",
   };
+}
+
+function cdn(hitRatio: number): ComponentParams {
+  return { kind: "cdn", hitRatio };
+}
+
+function gateway(limitRps: number): ComponentParams {
+  return { kind: "apiGateway", limitRps };
+}
+
+function rateLimiter(limitRps: number): ComponentParams {
+  return { kind: "rateLimiter", limitRps };
 }
 
 function queue(maxDepth: number, throughputRps: number): ComponentParams {
@@ -285,12 +301,180 @@ const FLASH_SALE_REFERENCE: Architecture = {
   ],
 };
 
+// Ride hailing locations ----------------------------------------------------
+
+const RIDE_HAILING: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("ride-clients", "clients", "Driver apps", 40),
+    node("ride-dns", "dns", "DNS", 300),
+    node("ride-lb", "loadBalancer", "Load balancer", 560),
+    node("ride-app", "appServer", "Location service", 820, 160, appServer(1)),
+    node("ride-db", "database", "Location store", 1_080),
+  ],
+  edges: [
+    edge("edge-ride-clients-dns", "ride-clients", "ride-dns"),
+    edge("edge-ride-dns-lb", "ride-dns", "ride-lb"),
+    edge("edge-ride-lb-app", "ride-lb", "ride-app"),
+    edge("edge-ride-app-db", "ride-app", "ride-db"),
+  ],
+};
+
+const RIDE_HAILING_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("ride-clients", "clients", "Driver apps", 40),
+    node("ride-dns", "dns", "DNS", 300),
+    node("ride-lb", "loadBalancer", "Load balancer", 560),
+    node("ride-app", "appServer", "Location service", 820, 160, appServer(8)),
+    node("ride-cache", "cache", "Hot locations", 1_080, 160, cache(8)),
+    node("ride-db", "database", "Location store", 1_340, 160, database("medium", 1, 2)),
+  ],
+  edges: [
+    edge("edge-ride-clients-dns", "ride-clients", "ride-dns"),
+    edge("edge-ride-dns-lb", "ride-dns", "ride-lb"),
+    edge("edge-ride-lb-app", "ride-lb", "ride-app"),
+    edge("edge-ride-app-cache", "ride-app", "ride-cache"),
+    edge("edge-ride-cache-db", "ride-cache", "ride-db"),
+  ],
+};
+
+// Video streaming -----------------------------------------------------------
+
+const VIDEO_STREAMING: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("video-clients", "clients", "Viewers", 40),
+    node("video-cdn", "cdn", "CDN", 300),
+    node("video-lb", "loadBalancer", "Load balancer", 560),
+    node("video-app", "appServer", "Stream service", 820, 160, appServer(1)),
+    node("video-storage", "objectStorage", "Video bucket", 1_080, 60),
+    node("video-db", "database", "Catalog", 1_080, 260, database("small")),
+  ],
+  edges: [
+    edge("edge-video-clients-cdn", "video-clients", "video-cdn"),
+    edge("edge-video-cdn-lb", "video-cdn", "video-lb"),
+    edge("edge-video-lb-app", "video-lb", "video-app"),
+    edge("edge-video-app-storage", "video-app", "video-storage", ["static"]),
+    edge("edge-video-app-db", "video-app", "video-db", ["read", "write"]),
+  ],
+};
+
+const VIDEO_STREAMING_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("video-clients", "clients", "Viewers", 40),
+    node("video-cdn", "cdn", "CDN", 300, 160, cdn(0.95)),
+    node("video-lb", "loadBalancer", "Load balancer", 560),
+    node("video-app", "appServer", "Stream service", 820, 160, appServer(6)),
+    node("video-storage", "objectStorage", "Video bucket", 1_080, 60),
+    node("video-db", "database", "Catalog", 1_080, 260, database("large")),
+  ],
+  edges: [
+    edge("edge-video-clients-cdn", "video-clients", "video-cdn"),
+    edge("edge-video-cdn-lb", "video-cdn", "video-lb"),
+    edge("edge-video-lb-app", "video-lb", "video-app"),
+    edge("edge-video-app-storage", "video-app", "video-storage", ["static"]),
+    edge("edge-video-app-db", "video-app", "video-db", ["read", "write"]),
+  ],
+};
+
+// Twitter-like timeline -----------------------------------------------------
+
+const TIMELINE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("timeline-clients", "clients", "Clients", 40),
+    node("timeline-dns", "dns", "DNS", 300),
+    node("timeline-lb", "loadBalancer", "Load balancer", 560),
+    node("timeline-app", "appServer", "Timeline service", 820, 160, appServer(1)),
+    node("timeline-db", "database", "Timeline store", 1_080),
+  ],
+  edges: [
+    edge("edge-timeline-clients-dns", "timeline-clients", "timeline-dns"),
+    edge("edge-timeline-dns-lb", "timeline-dns", "timeline-lb"),
+    edge("edge-timeline-lb-app", "timeline-lb", "timeline-app"),
+    edge("edge-timeline-app-db", "timeline-app", "timeline-db"),
+  ],
+};
+
+const TIMELINE_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("timeline-clients", "clients", "Clients", 40),
+    node("timeline-dns", "dns", "DNS", 300),
+    node("timeline-lb", "loadBalancer", "Load balancer", 560),
+    node("timeline-app", "appServer", "Timeline service", 820, 160, appServer(6)),
+    node("timeline-cache", "cache", "Timeline cache", 1_080, 60, cache(16)),
+    node("timeline-queue", "queue", "Fan-out queue", 1_080, 260, queue(20_000, 4_000)),
+    node("timeline-worker", "worker", "Fan-out workers", 1_340, 260, workers(8)),
+    node("timeline-db", "database", "Timeline store", 1_600, 160, database("medium", 1)),
+  ],
+  edges: [
+    edge("edge-timeline-clients-dns", "timeline-clients", "timeline-dns"),
+    edge("edge-timeline-dns-lb", "timeline-dns", "timeline-lb"),
+    edge("edge-timeline-lb-app", "timeline-lb", "timeline-app"),
+    edge("edge-timeline-app-cache", "timeline-app", "timeline-cache", ["read"]),
+    edge("edge-timeline-app-queue", "timeline-app", "timeline-queue", ["write"]),
+    edge("edge-timeline-app-db", "timeline-app", "timeline-db", ["static"]),
+    edge("edge-timeline-cache-db", "timeline-cache", "timeline-db"),
+    edge("edge-timeline-queue-worker", "timeline-queue", "timeline-worker"),
+    edge("edge-timeline-worker-db", "timeline-worker", "timeline-db"),
+  ],
+};
+
+// Rate-limited public API ---------------------------------------------------
+
+const RATE_LIMITED_API: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("api-clients", "clients", "API clients", 40),
+    node("api-dns", "dns", "DNS", 300),
+    node("api-lb", "loadBalancer", "Load balancer", 560),
+    node("api-app", "appServer", "API service", 820, 160, appServer(1)),
+    node("api-db", "database", "API store", 1_080),
+  ],
+  edges: [
+    edge("edge-api-clients-dns", "api-clients", "api-dns"),
+    edge("edge-api-dns-lb", "api-dns", "api-lb"),
+    edge("edge-api-lb-app", "api-lb", "api-app"),
+    edge("edge-api-app-db", "api-app", "api-db"),
+  ],
+};
+
+const RATE_LIMITED_API_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("api-clients", "clients", "API clients", 40),
+    node("api-dns", "dns", "DNS", 260),
+    node("api-gateway", "apiGateway", "API gateway", 480, 160, gateway(8_000)),
+    node("api-limiter", "rateLimiter", "Rate limiter", 700, 160, rateLimiter(6_000)),
+    node("api-lb", "loadBalancer", "Load balancer", 920, 160),
+    node("api-app", "appServer", "API service", 1_160, 160, appServer(20)),
+    node("api-cache", "cache", "Response cache", 1_400, 60, cache(4)),
+    node("api-db", "database", "API store", 1_400, 260, database("medium", 1)),
+  ],
+  edges: [
+    edge("edge-api-clients-dns", "api-clients", "api-dns"),
+    edge("edge-api-dns-gateway", "api-dns", "api-gateway"),
+    edge("edge-api-gateway-limiter", "api-gateway", "api-limiter"),
+    edge("edge-api-limiter-lb", "api-limiter", "api-lb"),
+    edge("edge-api-lb-app", "api-lb", "api-app"),
+    edge("edge-api-app-cache", "api-app", "api-cache"),
+    edge("edge-api-cache-db", "api-cache", "api-db"),
+  ],
+};
+
 const STARTERS: Readonly<Record<string, Architecture>> = {
   "personal-blog": PERSONAL_BLOG,
   "url-shortener": URL_SHORTENER,
   "photo-feed": PHOTO_FEED,
   "chat-notifications": CHAT_NOTIFICATIONS,
   "flash-sale": FLASH_SALE,
+  "ride-hailing": RIDE_HAILING,
+  "video-streaming": VIDEO_STREAMING,
+  "timeline-fanout": TIMELINE,
+  "rate-limited-api": RATE_LIMITED_API,
 };
 
 const REFERENCES: Readonly<Record<string, Architecture>> = {
@@ -299,6 +483,10 @@ const REFERENCES: Readonly<Record<string, Architecture>> = {
   "photo-feed": PHOTO_FEED_REFERENCE,
   "chat-notifications": CHAT_NOTIFICATIONS_REFERENCE,
   "flash-sale": FLASH_SALE_REFERENCE,
+  "ride-hailing": RIDE_HAILING_REFERENCE,
+  "video-streaming": VIDEO_STREAMING_REFERENCE,
+  "timeline-fanout": TIMELINE_REFERENCE,
+  "rate-limited-api": RATE_LIMITED_API_REFERENCE,
 };
 
 export function starterArchitectureFor(challengeId: string): Architecture {
