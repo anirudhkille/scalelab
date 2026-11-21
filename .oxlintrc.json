@@ -1,19 +1,67 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": [
+    "react",
+    "react-perf",
+    "typescript",
+    "oxc",
+    "import",
+    "jsx-a11y",
+    "vitest",
+    "promise",
+    "unicorn"
+  ],
   "env": {
     "browser": true,
+    "node": true,
     "es2024": true
   },
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
   },
   "rules": {
     "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/jsx-key": "error",
+    "react/no-array-index-key": "warn",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "react/react-in-jsx-scope": "off",
+    "react-perf/jsx-no-new-object-as-prop": "warn",
+    "react-perf/jsx-no-new-array-as-prop": "warn",
+    "react-perf/jsx-no-new-function-as-prop": "warn",
+    "react-perf/jsx-no-jsx-as-prop": "off",
     "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "off",
+    "import/no-cycle": "error",
+    "import/first": "error",
+    "import/no-duplicates": "error",
+    "import/no-unassigned-import": "off",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-is-valid": "error",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "vitest/no-focused-tests": "error",
+    "vitest/no-disabled-tests": "warn",
+    "vitest/expect-expect": "off",
+    "unicorn/filename-case": ["error", { "case": "kebabCase" }],
+    "unicorn/require-module-specifiers": "off",
     "no-console": "warn",
-    "eqeqeq": "error"
+    "no-var": "error",
+    "prefer-const": "error",
+    "eqeqeq": "error",
+    "no-underscore-dangle": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/shared/ui/**"],
+      "rules": {
+        "react/only-export-components": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["dist", "coverage"]
 }

@@ -1,14 +1,30 @@
+import { lazy } from "react";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 
-import { HubPage } from "@/features/challenges";
-import { LearnPage } from "@/features/learn";
-import { ProgressPage } from "@/features/progress";
-import { DevEnginePage } from "@/features/simulation";
-import { WorkspacePage } from "@/features/workspace";
+import { NotFoundPage } from "./pages/not-found-page";
 
 import { AppShell } from "./layouts/app-shell";
-import { NotFoundPage } from "./pages/not-found-page";
+
+const HubPage = lazy(() =>
+  import("@/features/challenges").then((module) => ({ default: module.HubPage })),
+);
+
+const WorkspacePage = lazy(() =>
+  import("@/features/workspace").then((module) => ({ default: module.WorkspacePage })),
+);
+
+const ProgressPage = lazy(() =>
+  import("@/features/progress").then((module) => ({ default: module.ProgressPage })),
+);
+
+const LearnPage = lazy(() =>
+  import("@/features/learn").then((module) => ({ default: module.LearnPage })),
+);
+
+const DevEnginePage = lazy(() =>
+  import("@/features/simulation").then((module) => ({ default: module.DevEnginePage })),
+);
 
 const router = createBrowserRouter([
   {

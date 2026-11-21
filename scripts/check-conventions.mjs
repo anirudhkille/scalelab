@@ -7,7 +7,7 @@ import { join, relative, sep } from "node:path";
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
-const FEATURES = [
+const FEATURES = new Set([
   "architecture",
   "challenges",
   "simulation",
@@ -17,7 +17,7 @@ const FEATURES = [
   "workspace",
   "learn",
   "settings",
-];
+]);
 const RANK = {
   architecture: 0,
   challenges: 1,
@@ -175,7 +175,7 @@ function checkImports(file, source) {
 
     const rest = specifier.slice(FEATURE_ALIAS.length);
     const [targetFeature, ...deepPath] = rest.split("/");
-    if (!targetFeature || !FEATURES.includes(targetFeature)) continue;
+    if (!targetFeature || !FEATURES.has(targetFeature)) continue;
 
     if (currentFeature === "shared") {
       fail(file, line, `shared code must not import feature "${targetFeature}"`);

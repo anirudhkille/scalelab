@@ -12,6 +12,35 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+
+          if (id.includes("react-router")) {
+            return "router";
+          }
+
+          if (id.includes("@base-ui") || id.includes("sonner")) {
+            return "ui";
+          }
+
+          if (id.includes("lucide-react")) {
+            return "icons";
+          }
+
+          if (id.includes("react-dom") || id.includes("node_modules/react/")) {
+            return "react";
+          }
+
+          return undefined;
+        },
+      },
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],

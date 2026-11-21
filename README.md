@@ -1,32 +1,110 @@
-# React + TypeScript + Vite
+# ScaleLab
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+ScaleLab is a local-first system-design stress-testing playground. Build an
+architecture, push simulated traffic through it, and learn from the first
+component that fails.
 
-Currently, two official plugins are available:
+Everything runs in the browser. There is no account, backend, or runtime data
+fetch.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Status
 
-## React Compiler
+- **M0 — foundation**: Vite + React 19 + TypeScript 7, Tailwind v4, shadcn/Base
+  UI, theme system, routing, feature folders, Vitest, oxlint + conventions check.
+- **M1 — engine core**: rate-based simulation, graph validation, topology sort,
+  clients/load-balancer/app-server behaviors, failure detection, deterministic
+  run controller, and engine tests.
+- **Next**: M2 component behaviors (cache, database, queue, worker, CDN, …) and
+  M3 canvas editing.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The workspace UI is still a scaffold. The engine is usable from
+`@/features/simulation` and has a developer page at `/dev/engine`.
 
-## Expanding the Oxlint configuration
+## Stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| Area        | Choice                                                    |
+| ----------- | --------------------------------------------------------- |
+| UI          | React 19, Vite 8, TypeScript 7 (strict)                   |
+| Styling     | Tailwind CSS v4, shadcn/ui with Base UI (`base-nova`)     |
+| Routing     | React Router v8 (routes are code-split with `React.lazy`) |
+| State       | Zustand + Immer, Zod 4 schemas                            |
+| Simulation  | Pure TypeScript engine, no React or DOM imports           |
+| Testing     | Vitest, Testing Library, jsdom                            |
+| Lint/format | oxlint, custom convention check, Prettier                 |
+| Package mgr | bun                                                       |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Commands
+
+```bash
+bun install
+bun run dev
+bun run build
+bun run typecheck
+bun run lint
+bun run format
+bun run test
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Run `bun run format`, `typecheck`, `lint`, and `test` before calling a milestone
+complete. `bun run lint` includes `scripts/check-conventions.mjs`, which enforces
+the type and feature-boundary rules that oxlint does not cover.
+
+## Source layout
+
+```text
+src/
+├─ app/            composition root: providers, router, layouts, fallback pages
+├─ features/
+│  ├─ architecture/  types, Zod schemas, component catalog, graph validation
+│  ├─ challenges/    challenge schemas and hub page
+│  ├─ simulation/    engine, runner, pages
+│  ├─ playback/      live visualization (M4)
+│  ├─ diagnosis/     failure explanations (M5)
+│  ├─ progress/      attempts and scoring
+│  ├─ settings/      themes, preferences, persistence
+│  ├─ workspace/     workspace composition
+│  └─ learn/         concept cards
+├─ shared/          UI primitives, helpers, hooks, storage
+└─ test/            global setup and theme tests
+```
+
+Feature public APIs live in `features/<name>/index.ts`. Import them through
+`@/features/<name>` only. Dependency direction:
+
+```text
+shared → architecture → challenges → simulation → diagnosis → progress → workspace → app
+```
+
+`settings` may be imported anywhere. `simulation/engine` is pure TypeScript.
+
+## Engine at a glance
+
+The engine models traffic as fluid rates with `dt = 0.1s`:
+
+- A generic queue turns arrival rate, capacity, and queue depth into served
+  rate, dropped rate, utilization, and latency.
+- Load-balancers split traffic evenly or by weight; app servers scale with
+  instances × requests per instance.
+- Failures must persist for 3 simulated seconds: error rate, p95 SLO, queue
+  overflow, storage exhaustion, or a run timeout.
+- The root cause is the upstream-most saturated node.
+
+See [`ENGINE.md`](./ENGINE.md) for the model and [`DECISIONS.md`](./DECISIONS.md)
+for deliberate trade-offs.
+
+## Performance notes
+
+- Every route page is lazy-loaded behind a shared `<Suspense>` fallback.
+- Vite splits React, React Router, Base UI, and icons into stable vendor chunks.
+- Static top-level data (navigation, palette, toast configuration) is defined
+  outside render functions.
+- The simulation engine is headless and can later move to a Web Worker without
+  changing its API.
+
+## Principles
+
+- Local-first: never fetch application data at runtime.
+- Learn from failure: every run should explain the bottleneck.
+- Keep the model explainable; tunable numbers live in
+  `features/simulation/engine/constants.ts`.
+- Small, composable files with lowercase kebab-case names.

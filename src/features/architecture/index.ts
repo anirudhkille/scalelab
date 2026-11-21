@@ -1,3 +1,20 @@
+export {
+  COMPONENT_CATALOG,
+  COMPONENT_DEFAULTS,
+  defaultComponentParams,
+  monthlyCostUsd,
+  trafficMixLabel,
+  type ComponentCatalogEntry,
+} from "./model/catalog";
+export {
+  compileArchitectureGraph,
+  formatGraphIssue,
+  validateArchitecture,
+  type ArchitectureGraph,
+  type ArchitectureValidation,
+  type GraphIssue,
+  type GraphValidationOptions,
+} from "./model/graph";
 export { asEdgeId, asNodeId, newEdgeId, newNodeId } from "./model/ids";
 export {
   architectureSchema,
@@ -14,6 +31,17 @@ export {
   type ComponentParams,
   type ComponentParamsByKind,
 } from "./model/schema";
+export {
+  ZERO_TRAFFIC,
+  TRAFFIC_CLASSES,
+  addTraffic,
+  clampRatio,
+  offeredRpsAtLoad,
+  scaleTraffic,
+  trafficForClass,
+  trafficFromLoad,
+  trafficTotal,
+} from "./model/traffic";
 export {
   DATABASE_INSTANCE_SIZES,
   EVICTION_POLICIES,

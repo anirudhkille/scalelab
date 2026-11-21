@@ -4,6 +4,8 @@ import { Link } from "react-router";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 
+import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
+
 const ROADMAP = [
   {
     icon: Workflow,
@@ -23,14 +25,14 @@ const ROADMAP = [
     milestone: "M5",
     body: "Every run ends with the bottleneck, the evidence, and a nudge toward the fix.",
   },
-] as const;
+] as const satisfies readonly RoadmapItem[];
 
 export function HubPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          MVP scaffold · M0
+          Engine core · M1
         </Badge>
         <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
@@ -61,28 +63,14 @@ export function HubPage() {
               What the workspace will do
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The challenge catalogue and tuned numbers arrive with M5. The shell is ready now.
+              The challenge catalogue and tuned numbers arrive with M5. The engine is ready now.
             </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ROADMAP.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-border/80 hover:bg-card/80"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid size-9 place-items-center rounded-lg border border-border bg-background text-primary">
-                  <item.icon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
-                  {item.milestone}
-                </span>
-              </div>
-              <h3 className="mt-4 text-base font-medium">{item.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-            </article>
+            <RoadmapCard key={item.title} item={item} />
           ))}
         </div>
       </section>
