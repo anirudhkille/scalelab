@@ -5,3 +5,4 @@ coverage
 bun.lock
 package-lock.json
 plan.md
+.husky/
