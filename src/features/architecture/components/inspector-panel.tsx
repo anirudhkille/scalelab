@@ -1,10 +1,16 @@
-import { MousePointerClick } from "lucide-react";
+import { Lock, MousePointerClick } from "lucide-react";
+
+import { Badge } from "@/shared/ui/badge";
 
 import { EdgeInspector } from "./edge-inspector";
 import { NodeInspector } from "./node-inspector";
 import { selectSelectedEdge, selectSelectedNode, useDesignStore } from "../store/design-store";
 
-export function InspectorPanel() {
+type InspectorPanelProps = {
+  readonly locked?: boolean;
+};
+
+export function InspectorPanel({ locked = false }: InspectorPanelProps) {
   const selectedNode = useDesignStore(selectSelectedNode);
   const selectedEdge = useDesignStore(selectSelectedEdge);
 
@@ -12,12 +18,26 @@ export function InspectorPanel() {
     <aside className="hidden min-h-0 flex-col border-l bg-card/25 lg:flex">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-xs font-semibold tracking-wider uppercase">Inspector</h2>
-        <span className="font-mono text-[10px] text-muted-foreground">
-          {selectedNode ? "node" : selectedEdge ? "edge" : "idle"}
-        </span>
+        {locked ? (
+          <Badge variant="outline" className="gap-1 text-[10px]">
+            <Lock className="size-3" aria-hidden="true" />
+            Locked
+          </Badge>
+        ) : (
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {selectedNode ? "node" : selectedEdge ? "edge" : "idle"}
+          </span>
+        )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        className={
+          locked
+            ? "pointer-events-none min-h-0 flex-1 overflow-y-auto opacity-55"
+            : "min-h-0 flex-1 overflow-y-auto"
+        }
+        aria-disabled={locked}
+      >
         {selectedNode ? <NodeInspector node={selectedNode} /> : null}
         {selectedEdge ? <EdgeInspector edge={selectedEdge} /> : null}
 

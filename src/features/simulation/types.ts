@@ -1,4 +1,4 @@
-import type { NodeId } from "@/features/architecture";
+import type { EdgeId, NodeId } from "@/features/architecture";
 import type { ChallengeRequirements, LoadStage } from "@/features/challenges";
 
 export type { LoadStage };
@@ -26,10 +26,16 @@ export type RunMetrics = {
   readonly monthlyCostUsd: number;
 };
 
+export type EdgeSnapshot = {
+  readonly edgeId: EdgeId;
+  readonly rps: number;
+};
+
 export type SimulationStep = {
   readonly timeSec: number;
   readonly metrics: RunMetrics;
   readonly nodes: readonly NodeSnapshot[];
+  readonly edges: readonly EdgeSnapshot[];
 };
 
 export type FailureReason =

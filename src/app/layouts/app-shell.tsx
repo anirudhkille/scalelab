@@ -44,7 +44,25 @@ export function AppShell() {
       </main>
 
       <footer className="border-t border-border/60 px-4 py-3 text-center text-xs text-muted-foreground sm:px-6">
-        ScaleLab is a learning model, not a benchmark. Everything stays in your browser.
+        <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2">
+          <span>
+            ScaleLab is a learning model, not a benchmark. Everything stays in your browser.
+          </span>
+          <span aria-hidden="true" className="hidden sm:inline">
+            ·
+          </span>
+          <span>
+            Built by{" "}
+            <a
+              href="https://anirudhkille.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Anirudh Kille
+            </a>
+          </span>
+        </div>
       </footer>
     </div>
   );

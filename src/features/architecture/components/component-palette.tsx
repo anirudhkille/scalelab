@@ -51,7 +51,7 @@ const PaletteItem = memo(function PaletteItem({ kind, disabled, onAdd }: Palette
       draggable={!disabled}
       disabled={disabled}
       title={catalog.description}
-      aria-label={disabled ? `${catalog.label} is already in the design` : `Add ${catalog.label}`}
+      aria-label={disabled ? `${catalog.label} is unavailable` : `Add ${catalog.label}`}
       onClick={handleClick}
       onDragStart={handleDragStart}
       className="group flex w-full cursor-grab items-start gap-2 rounded-lg border border-transparent px-1.5 py-1.5 text-left transition-colors outline-none hover:border-border hover:bg-muted/60 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"
@@ -72,7 +72,7 @@ const PaletteItem = memo(function PaletteItem({ kind, disabled, onAdd }: Palette
   );
 });
 
-export function ComponentPalette() {
+export function ComponentPalette({ disabled = false }: { readonly disabled?: boolean }) {
   const { screenToFlowPosition } = useReactFlow();
   const addNode = useDesignStore((state) => state.addNode);
   const hasClients = useDesignStore((state) =>
@@ -81,6 +81,10 @@ export function ComponentPalette() {
 
   const addAtCanvasCenter = useCallback(
     (kind: NodeKind) => {
+      if (disabled) {
+        return;
+      }
+
       const canvas = document.querySelector<HTMLElement>("[data-scalelab-canvas]");
       const bounds = canvas?.getBoundingClientRect();
       const clientX = bounds ? bounds.left + bounds.width / 2 : window.innerWidth / 2;
@@ -99,7 +103,7 @@ export function ComponentPalette() {
         );
       }
     },
-    [addNode, screenToFlowPosition],
+    [addNode, disabled, screenToFlowPosition],
   );
 
   return (
@@ -107,7 +111,9 @@ export function ComponentPalette() {
       <div className="border-b px-3 py-3">
         <h2 className="text-xs font-semibold tracking-wider uppercase">Components</h2>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          Drag onto the canvas, or click to drop one in the center.
+          {disabled
+            ? "Locked while the simulation runs."
+            : "Drag onto the canvas, or click to drop one in the center."}
         </p>
       </div>
 
@@ -122,7 +128,7 @@ export function ComponentPalette() {
                 <PaletteItem
                   key={kind}
                   kind={kind}
-                  disabled={kind === "clients" && hasClients}
+                  disabled={disabled || (kind === "clients" && hasClients)}
                   onAdd={addAtCanvasCenter}
                 />
               ))}

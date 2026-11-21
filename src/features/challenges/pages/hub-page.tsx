@@ -1,4 +1,4 @@
-import { ArrowRight, Gauge, Play, Save } from "lucide-react";
+import { ArrowRight, Gauge, Save, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 
 import { Badge } from "@/shared/ui/badge";
@@ -7,12 +7,6 @@ import { Button } from "@/shared/ui/button";
 import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
 
 const ROADMAP = [
-  {
-    icon: Play,
-    title: "Live load tests",
-    milestone: "M4",
-    body: "Watch simulated users flow through the graph and saturate the first weak link.",
-  },
   {
     icon: Gauge,
     title: "Failure reports",
@@ -25,6 +19,12 @@ const ROADMAP = [
     milestone: "M6",
     body: "Keep designs and attempt history locally, with import, export, and reset.",
   },
+  {
+    icon: Sparkles,
+    title: "Polish and launch",
+    milestone: "M7",
+    body: "Onboarding, keyboard help, reduced motion, accessibility, and the final pass.",
+  },
 ] as const satisfies readonly RoadmapItem[];
 
 export function HubPage() {
@@ -32,7 +32,7 @@ export function HubPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Canvas editor · M3
+          Live load tests · M4
         </Badge>
         <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
@@ -68,8 +68,8 @@ export function HubPage() {
               What comes next
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The canvas is ready. Live runs arrive in M4; the challenge catalogue and tuned numbers
-              follow in M5.
+              The workspace can run live load tests. Next: failure reports, the challenge catalogue,
+              and saved progress.
             </p>
           </div>
         </div>

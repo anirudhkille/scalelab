@@ -35,3 +35,10 @@ One line each: decision, and why.
 - **Inspector fields are generated from `COMPONENT_PARAM_SPECS`** — one spec table drives labels, ranges, units, select options, and hints. Every patch is validated with `componentParamsSchema` before reaching the store.
 - **Design autosave is deferred to M6** — the editor is in-memory per challenge visit. Persistence, attempt history, and import/export belong with the progress/storage milestone.
 - **React Flow CSS is global and themed with `--xy-*` variables** — the graph needs to inherit ScaleLab theme tokens in all four palettes. React Flow is also split into its own lazy vendor chunk.
+- **Simulation steps include edge rates** — `SimulationStep.edges` carries the routed rate per edge. The canvas and particle layer need flow thickness without re-running the engine or inspecting internal queue state.
+- **Playback runs in a Web Worker with a main-thread fallback** — the worker advances 2 ticks every 50 ms at 1x and uses the same `driveTicks` helper as the fallback. This keeps the engine pure and keeps playback usable where workers are unavailable.
+- **Run history samples at 4 Hz** — the run store receives every engine tick but appends a chart sample only every 0.5 simulated seconds, capped at 240 samples. Recharts stays responsive without rendering at 20 Hz.
+- **Particles are one pooled canvas, not React nodes** — at most 400 particles are preallocated and reused. Density is sampled from edge rates, and the canvas reads the run store outside React so playback does not trigger a render per particle.
+- **Challenge run configs live with challenges** — `loadProfile` and requirements are structural data owned by `features/challenges`. The workspace passes them to `startRun` without challenges importing simulation.
+- **The workspace locks while running** — palette, inspector, drag/connect/drop, and design shortcuts are disabled during a run. This prevents the architecture from changing underneath a worker snapshot stream.
+- **Footer credits the author** — `Built by Anirudh Kille` links to `https://anirudhkille.com`; it is a static external link, not application data.

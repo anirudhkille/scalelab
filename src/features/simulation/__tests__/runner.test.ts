@@ -125,6 +125,8 @@ describe("runSimulation", () => {
     expect(result.result.finalStep.nodes.filter((snapshot) => snapshot.servedRps > 0)).toHaveLength(
       5,
     );
+    expect(result.result.finalStep.edges).toHaveLength(4);
+    expect(result.result.finalStep.edges.every((snapshot) => snapshot.rps > 0)).toBe(true);
   });
 
   it("tracks max users sustained during a ramp", () => {

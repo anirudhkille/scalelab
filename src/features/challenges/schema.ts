@@ -48,6 +48,12 @@ export const challengeRequirementsSchema = z.object({
 
 export type ChallengeRequirements = z.infer<typeof challengeRequirementsSchema>;
 
+/** The challenge data needed by a run, without depending on the simulation feature. */
+export type ChallengeRunConfig = {
+  readonly requirements: ChallengeRequirements;
+  readonly loadProfile: readonly LoadStage[];
+};
+
 export const challengeDifficultySchema = z.union([
   z.literal(1),
   z.literal(2),

@@ -45,7 +45,29 @@ export {
   type TrafficDistribution,
 } from "./engine";
 export { DevEnginePage } from "./pages/dev-engine-page";
+export { useRunSimulation, type RunSimulationControls } from "./hooks/use-run-simulation";
+export {
+  createSimulationRunner,
+  type SimulationRunner,
+  type SimulationRunnerCallbacks,
+} from "./runner/simulation-runner";
+export {
+  CHART_SAMPLE_INTERVAL_SEC,
+  MAX_CHART_SAMPLES,
+  selectIsRunning,
+  selectRunError,
+  selectRunHistory,
+  selectRunOutcome,
+  selectRunResult,
+  selectRunStatus,
+  selectRunStep,
+  useRunStore,
+  type RunChartSample,
+  type RunState,
+  type RunStatus,
+} from "./store/run-store";
 export type {
+  EdgeSnapshot,
   FailureReason,
   LoadStage,
   NodeSnapshot,

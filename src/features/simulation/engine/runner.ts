@@ -1,4 +1,5 @@
 import {
+  ZERO_TRAFFIC,
   addTraffic,
   compileArchitectureGraph,
   monthlyCostUsd,
@@ -6,6 +7,7 @@ import {
   trafficTotal,
   type ArchNode,
   type Architecture,
+  type EdgeId,
   type NodeId,
   type TrafficRate,
 } from "@/features/architecture";
@@ -31,6 +33,7 @@ import type {
   SimulationSetup,
 } from "./types";
 import type {
+  EdgeSnapshot,
   NodeSnapshot,
   RunMetrics,
   RunOutcome,
@@ -120,9 +123,13 @@ export function createSimulationEngine(
     const offeredRps = trafficTotal(offered);
     const incomingByNode = new Map<NodeId, TrafficRate>();
     const edgeById = new Map(graph.edges.map((edge) => [edge.id, edge]));
+    const edgeRates = new Map<EdgeId, TrafficRate>();
 
     for (const node of graph.nodes) {
       incomingByNode.set(node.id, { read: 0, write: 0, static: 0 });
+    }
+    for (const edge of graph.edges) {
+      edgeRates.set(edge.id, ZERO_TRAFFIC);
     }
     incomingByNode.set(graph.clientId, offered);
 
@@ -166,8 +173,16 @@ export function createSimulationEngine(
 
         const current = incomingByNode.get(edge.target) ?? { read: 0, write: 0, static: 0 };
         incomingByNode.set(edge.target, addTraffic(current, flow.rate));
+
+        const edgeCurrent = edgeRates.get(flow.edgeId) ?? ZERO_TRAFFIC;
+        edgeRates.set(flow.edgeId, addTraffic(edgeCurrent, flow.rate));
       }
     }
+
+    const edges: EdgeSnapshot[] = graph.edges.map((edge) => ({
+      edgeId: edge.id,
+      rps: trafficTotal(edgeRates.get(edge.id) ?? ZERO_TRAFFIC),
+    }));
 
     const metrics = computeRunMetrics({
       users,
@@ -180,6 +195,7 @@ export function createSimulationEngine(
       timeSec,
       metrics,
       nodes,
+      edges,
     };
 
     const healthy = isHealthy(metrics, requirements);

@@ -23,6 +23,13 @@ export {
   type GraphIssue,
   type GraphValidationOptions,
 } from "./model/graph";
+export {
+  healthLevel,
+  queuePressureRatio,
+  type NodeHealth,
+  type NodeHealthLevel,
+} from "./model/health";
+export { NODE_CARD_HEIGHT, NODE_CARD_WIDTH } from "./model/editor";
 export { asEdgeId, asNodeId, newEdgeId, newNodeId } from "./model/ids";
 export {
   architectureSchema,

@@ -442,6 +442,16 @@
   transition: stroke 120ms ease;
 }
 
+@keyframes scalelab-edge-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.scalelab-edge-flow {
+  animation: scalelab-edge-dash 0.8s linear infinite;
+}
+
 .react-flow__controls {
   overflow: hidden;
   border: 1px solid var(--border);

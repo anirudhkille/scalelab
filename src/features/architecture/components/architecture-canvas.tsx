@@ -5,6 +5,7 @@ import {
   useRef,
   type DragEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
 } from "react";
 import {
   Background,
@@ -26,8 +27,9 @@ import { toast } from "sonner";
 import { asEdgeId, asNodeId } from "../model/ids";
 import { validateArchitecture, type GraphIssue } from "../model/graph";
 import { COMPONENT_DRAG_MIME, NODE_CARD_HEIGHT, NODE_CARD_WIDTH } from "../model/editor";
+import type { NodeHealth } from "../model/health";
 import type { Architecture } from "../model/schema";
-import { isNodeKind } from "../model/types";
+import { isNodeKind, type EdgeId, type NodeId } from "../model/types";
 import { selectArchitecture, selectSelection, useDesignStore } from "../store/design-store";
 import { ArchitectureEdge, type ArchitectureFlowEdge } from "./architecture-edge";
 import { ArchitectureNode, type ArchitectureFlowNode } from "./architecture-node";
@@ -40,7 +42,23 @@ const SNAP_GRID: [number, number] = [16, 16];
 const FIT_VIEW_OPTIONS = { padding: 0.2 };
 const EMPTY_ISSUES: readonly GraphIssue[] = [];
 
-export function ArchitectureCanvas() {
+type ArchitectureCanvasProps = {
+  readonly nodeHealthById?: ReadonlyMap<NodeId, NodeHealth>;
+  readonly edgeFlowById?: ReadonlyMap<EdgeId, number>;
+  readonly crowdUsers?: number;
+  readonly locked?: boolean;
+  readonly flowing?: boolean;
+  readonly overlay?: ReactNode;
+};
+
+export function ArchitectureCanvas({
+  nodeHealthById,
+  edgeFlowById,
+  crowdUsers,
+  locked = false,
+  flowing = false,
+  overlay,
+}: ArchitectureCanvasProps) {
   const architecture = useDesignStore(selectArchitecture);
   const selection = useDesignStore(selectSelection);
   const addNode = useDesignStore((state) => state.addNode);
@@ -61,21 +79,32 @@ export function ArchitectureCanvas() {
 
   const flowNodes = useMemo<ArchitectureFlowNode[]>(
     () =>
-      architecture.nodes.map((node) => ({
-        id: node.id,
-        type: "architecture",
-        position: node.position,
-        data: { label: node.label, params: node.params },
-        selected: selection?.type === "node" && selection.id === node.id,
-        deletable: node.params.kind !== "clients",
-      })),
-    [architecture.nodes, selection],
+      architecture.nodes.map((node) => {
+        const health = nodeHealthById?.get(node.id);
+        const showCrowd = node.params.kind === "clients" && crowdUsers !== undefined;
+
+        return {
+          id: node.id,
+          type: "architecture",
+          position: node.position,
+          data: {
+            label: node.label,
+            params: node.params,
+            ...(health ? { health } : {}),
+            ...(showCrowd ? { crowdUsers } : {}),
+          },
+          selected: selection?.type === "node" && selection.id === node.id,
+          deletable: !locked && node.params.kind !== "clients",
+        };
+      }),
+    [architecture.nodes, crowdUsers, locked, nodeHealthById, selection],
   );
 
   const flowEdges = useMemo<ArchitectureFlowEdge[]>(
     () =>
       architecture.edges.map((edge) => {
         const selected = selection?.type === "edge" && selection.id === edge.id;
+        const flowRps = edgeFlowById?.get(edge.id) ?? 0;
 
         return {
           id: edge.id,
@@ -83,6 +112,8 @@ export function ArchitectureCanvas() {
           source: edge.source,
           target: edge.target,
           selected,
+          deletable: !locked,
+          data: { flowRps, active: flowing && flowRps > 0 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 14,
@@ -91,7 +122,7 @@ export function ArchitectureCanvas() {
           },
         };
       }),
-    [architecture.edges, selection],
+    [architecture.edges, edgeFlowById, flowing, locked, selection],
   );
 
   useEffect(() => {
@@ -135,7 +166,7 @@ export function ArchitectureCanvas() {
 
   const handleConnect = useCallback(
     (connection: Connection) => {
-      if (!connection.source || !connection.target) {
+      if (locked || !connection.source || !connection.target) {
         return;
       }
 
@@ -145,7 +176,7 @@ export function ArchitectureCanvas() {
         toast.error("That connection is not valid. Check for duplicates or self-links.");
       }
     },
-    [addEdge],
+    [addEdge, locked],
   );
 
   const handleNodeClick = useCallback(
@@ -171,14 +202,26 @@ export function ArchitectureCanvas() {
     }
   }, [commitHistory]);
 
-  const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
+  const handleDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (locked) {
+        return;
+      }
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    },
+    [locked],
+  );
 
   const handleDrop = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+
+      if (locked) {
+        return;
+      }
+
       const kind = event.dataTransfer.getData(COMPONENT_DRAG_MIME);
 
       if (!isNodeKind(kind)) {
@@ -199,7 +242,7 @@ export function ArchitectureCanvas() {
         );
       }
     },
-    [addNode, screenToFlowPosition],
+    [addNode, locked, screenToFlowPosition],
   );
 
   return (
@@ -227,6 +270,8 @@ export function ArchitectureCanvas() {
         connectionLineStyle={CONNECTION_LINE_STYLE}
         deleteKeyCode={null}
         multiSelectionKeyCode={null}
+        nodesDraggable={!locked}
+        nodesConnectable={!locked}
         fitView
         fitViewOptions={FIT_VIEW_OPTIONS}
         minZoom={0.25}
@@ -240,12 +285,16 @@ export function ArchitectureCanvas() {
           position="top-left"
           className="rounded-lg border bg-card/90 px-3 py-2 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
         >
-          Drag a component in. Connect the handles. Select to tune it.
+          {locked
+            ? "Run in progress. The design is locked until playback ends."
+            : "Drag a component in. Connect the handles. Select to tune it."}
         </Panel>
         <Panel position="bottom-right">
           <ValidationPanel issues={issues} />
         </Panel>
       </ReactFlow>
+
+      {overlay ? <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div> : null}
     </div>
   );
 }

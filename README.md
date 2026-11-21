@@ -21,10 +21,13 @@ fetch.
   custom node/edge renderers, Zod-validated parameter forms, connect/delete/
   duplicate, undo/redo with keyboard shortcuts, live cost meter, and pre-run
   validation messages.
-- **Next**: M4 live load-test playback.
+- **M4 — live load tests**: worker-backed playback, run/stop and 1x–10x speed,
+  per-node health bars, edge flow weighting, particle traffic, four live
+  metrics charts, and a failure overlay.
+- **Next**: M5 failure reports and the challenge catalogue.
 
-The workspace at `/challenge/:id` is now a working editor. The engine is usable
-headlessly from `@/features/simulation` and has a developer page at
+The workspace at `/challenge/:id` can now build and run a design. The engine is
+also usable headlessly from `@/features/simulation` and has a developer page at
 `/dev/engine`.
 
 ## Stack
@@ -99,6 +102,21 @@ shared → architecture → challenges → simulation → diagnosis → progress
 Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
 `Ctrl/Cmd+D` duplicate, `Delete`/`Backspace` remove, `Escape` clear selection.
 
+## Runs at a glance
+
+- Run starts a simulation worker and streams snapshots back to a Zustand run
+  store at roughly 20 updates per second. The main-thread runner is the fallback
+  when workers are unavailable.
+- The canvas locks while a run is active. Nodes show utilization and queue bars,
+  edges thicken with flow, and a single particle canvas draws traffic without
+  one React element per request.
+- The bottom panel keeps a rolling 60-second view of users, served/dropped RPS,
+  p95 latency against the SLO, and error rate. Charts sample at 4 Hz.
+- Stop ends the stream; a failed run shows the overload overlay and the first
+  component to give out.
+- `1x`, `2x`, `5x`, and `10x` speeds are simulated-time multipliers, not animation
+  speeds. Particle density is sampled from the current edge rates.
+
 ## Engine at a glance
 
 The engine models traffic as fluid rates with `dt = 0.1s`:
@@ -124,12 +142,14 @@ for deliberate trade-offs.
 - Every route page is lazy-loaded behind a shared `<Suspense>` fallback.
 - Vite splits React, React Router, React Flow, Base UI, and icons into stable
   vendor chunks.
-- Palette items are memoized, editor callbacks are stable, and React Flow only
-  renders visible nodes.
+- Palette items, node cards, and playback charts are memoized; editor callbacks
+  are stable.
+- Playback charts read a 4 Hz sample history, while the particle canvas reads
+  simulation state outside React at animation-frame speed.
 - Static top-level data (navigation, palette, toast configuration) is defined
   outside render functions.
-- The simulation engine is headless and can later move to a Web Worker without
-  changing its API.
+- The engine runs in a Web Worker with a main-thread fallback that shares the
+  same tick driver.
 
 ## Principles
 

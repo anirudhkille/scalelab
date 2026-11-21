@@ -15,10 +15,10 @@ function isEditableTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function useDesignShortcuts(): void {
+export function useDesignShortcuts(enabled = true): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isEditableTarget(event.target)) {
+      if (!enabled || event.defaultPrevented || isEditableTarget(event.target)) {
         return;
       }
 
@@ -76,5 +76,5 @@ export function useDesignShortcuts(): void {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [enabled]);
 }
