@@ -1,4 +1,4 @@
-import { ArrowRight, Gauge, Play, Workflow } from "lucide-react";
+import { ArrowRight, Gauge, Play, Save } from "lucide-react";
 import { Link } from "react-router";
 
 import { Badge } from "@/shared/ui/badge";
@@ -7,12 +7,6 @@ import { Button } from "@/shared/ui/button";
 import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
 
 const ROADMAP = [
-  {
-    icon: Workflow,
-    title: "Canvas editor",
-    milestone: "M3",
-    body: "Drag components onto the board, wire them together, and tune every parameter.",
-  },
   {
     icon: Play,
     title: "Live load tests",
@@ -25,6 +19,12 @@ const ROADMAP = [
     milestone: "M5",
     body: "Every run ends with the bottleneck, the evidence, and a nudge toward the fix.",
   },
+  {
+    icon: Save,
+    title: "Saved progress",
+    milestone: "M6",
+    body: "Keep designs and attempt history locally, with import, export, and reset.",
+  },
 ] as const satisfies readonly RoadmapItem[];
 
 export function HubPage() {
@@ -32,7 +32,7 @@ export function HubPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Data components · M2
+          Canvas editor · M3
         </Badge>
         <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
@@ -43,11 +43,16 @@ export function HubPage() {
           is the lesson.
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Button size="lg" render={<Link to="/challenge/personal-blog" />}>
+          <Button size="lg" nativeButton={false} render={<Link to="/challenge/personal-blog" />}>
             Open the warm-up
             <ArrowRight className="size-4" aria-hidden="true" />
           </Button>
-          <Button size="lg" variant="outline" render={<Link to="/challenge/url-shortener" />}>
+          <Button
+            size="lg"
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/challenge/url-shortener" />}
+          >
             Try the URL shortener
           </Button>
         </div>
@@ -60,10 +65,11 @@ export function HubPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 id="roadmap-heading" className="text-lg font-semibold tracking-tight">
-              What the workspace will do
+              What comes next
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The challenge catalogue and tuned numbers arrive with M5. The engine is ready now.
+              The canvas is ready. Live runs arrive in M4; the challenge catalogue and tuned numbers
+              follow in M5.
             </p>
           </div>
         </div>

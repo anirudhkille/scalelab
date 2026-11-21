@@ -13,7 +13,7 @@ export function NotFoundPage() {
       <p className="mt-2 text-sm text-muted-foreground">
         That path is not part of the lab. Head back to the challenge hub and pick a target.
       </p>
-      <Button className="mt-6" render={<Link to="/" />}>
+      <Button className="mt-6" nativeButton={false} render={<Link to="/" />}>
         Back to challenges
       </Button>
     </div>

@@ -1,4 +1,4 @@
-import type { ComponentParams } from "./schema";
+import type { ArchNode, ComponentParams } from "./schema";
 import type { DatabaseInstanceSize, NodeKind, ReplicationMode, TrafficClass } from "./types";
 
 export type ComponentCatalogEntry = {
@@ -118,6 +118,12 @@ function queueMonthlyCostUsd(throughputRps: number): number {
 
 export function defaultComponentParams(kind: NodeKind): ComponentParams {
   return { ...COMPONENT_DEFAULTS[kind] };
+}
+
+export function architectureMonthlyCostUsd(architecture: {
+  readonly nodes: readonly ArchNode[];
+}): number {
+  return architecture.nodes.reduce((total, node) => total + monthlyCostUsd(node.params), 0);
 }
 
 /** Illustrative monthly cost. Tunable, not a cloud pricing quote. */

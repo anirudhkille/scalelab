@@ -1,3 +1,4 @@
+import { useCallback, type MouseEvent } from "react";
 import { Check, Palette } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
@@ -5,12 +6,22 @@ import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 
 import { useSettingsStore } from "../store/app-store";
-import { THEMES } from "../themes";
+import { THEMES, isThemeId } from "../themes";
 
 export function ThemePicker() {
   const theme = useSettingsStore((state) => state.settings.theme);
   const setTheme = useSettingsStore((state) => state.setTheme);
   const current = THEMES.find((item) => item.id === theme) ?? THEMES[0];
+  const handleThemeClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const next = event.currentTarget.dataset.themeId;
+
+      if (isThemeId(next)) {
+        setTheme(next);
+      }
+    },
+    [setTheme],
+  );
 
   return (
     <Popover>
@@ -38,7 +49,8 @@ export function ThemePicker() {
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                onClick={() => setTheme(item.id)}
+                data-theme-id={item.id}
+                onClick={handleThemeClick}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-2 py-2 text-left transition-colors outline-none",
                   "hover:bg-accent hover:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring/50",

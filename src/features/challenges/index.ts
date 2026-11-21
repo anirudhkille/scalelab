@@ -1,3 +1,4 @@
+export { starterArchitectureFor } from "./data/starter-designs";
 export { HubPage } from "./pages/hub-page";
 export {
   asChallengeId,

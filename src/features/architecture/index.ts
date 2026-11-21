@@ -1,6 +1,14 @@
+export { ArchitectureCanvas } from "./components/architecture-canvas";
+export { ComponentIcon } from "./components/component-icon";
+export { ComponentPalette } from "./components/component-palette";
+export { EdgeInspector } from "./components/edge-inspector";
+export { InspectorPanel } from "./components/inspector-panel";
+export { NodeInspector } from "./components/node-inspector";
+export { useDesignShortcuts } from "./hooks/use-design-shortcuts";
 export {
   COMPONENT_CATALOG,
   COMPONENT_DEFAULTS,
+  architectureMonthlyCostUsd,
   defaultComponentParams,
   monthlyCostUsd,
   trafficMixLabel,
@@ -31,6 +39,7 @@ export {
   type ComponentParams,
   type ComponentParamsByKind,
 } from "./model/schema";
+export { componentSummary } from "./model/summary";
 export {
   ZERO_TRAFFIC,
   TRAFFIC_CLASSES,
@@ -48,6 +57,7 @@ export {
   LOAD_BALANCER_ALGORITHMS,
   NODE_KINDS,
   REPLICATION_MODES,
+  isNodeKind,
   type DatabaseInstanceSize,
   type EdgeId,
   type EvictionPolicy,
@@ -59,3 +69,17 @@ export {
   type TrafficRate,
   type Vec2,
 } from "./model/types";
+export {
+  selectArchitecture,
+  selectCanRedo,
+  selectCanUndo,
+  selectCostUsd,
+  selectEdgeCount,
+  selectNodeCount,
+  selectSelectedEdge,
+  selectSelectedNode,
+  selectSelection,
+  useDesignStore,
+  type DesignSelection,
+  type DesignState,
+} from "./store/design-store";

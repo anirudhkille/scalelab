@@ -17,10 +17,15 @@ fetch.
 - **M2 — data components + diagnosis**: cache warm-up and hit ratios, database
   replicas/shards/storage, queue and worker backpressure, CDN absorption,
   three-scenario root-cause attribution, and 16 diagnosis rule templates.
-- **Next**: M3 canvas editing.
+- **M3 — canvas editor**: React Flow canvas, draggable component palette,
+  custom node/edge renderers, Zod-validated parameter forms, connect/delete/
+  duplicate, undo/redo with keyboard shortcuts, live cost meter, and pre-run
+  validation messages.
+- **Next**: M4 live load-test playback.
 
-The workspace UI is still a scaffold. The engine is usable from
-`@/features/simulation` and has a developer page at `/dev/engine`.
+The workspace at `/challenge/:id` is now a working editor. The engine is usable
+headlessly from `@/features/simulation` and has a developer page at
+`/dev/engine`.
 
 ## Stack
 
@@ -57,7 +62,7 @@ the type and feature-boundary rules that oxlint does not cover.
 src/
 ├─ app/            composition root: providers, router, layouts, fallback pages
 ├─ features/
-│  ├─ architecture/  types, Zod schemas, component catalog, graph validation
+│  ├─ architecture/  model, design store, canvas, palette, inspector, validation
 │  ├─ challenges/    challenge schemas and hub page
 │  ├─ simulation/    engine, runner, pages
 │  ├─ playback/      live visualization (M4)
@@ -78,6 +83,21 @@ shared → architecture → challenges → simulation → diagnosis → progress
 ```
 
 `settings` may be imported anywhere. `simulation/engine` is pure TypeScript.
+
+## Canvas at a glance
+
+- The editor is a controlled React Flow graph backed by a Zustand design store.
+- Drag components from the palette or click to drop one at the canvas center.
+- Every node type has its own card, icon, summary, monthly cost, and inspector
+  fields generated from `COMPONENT_PARAM_SPECS`.
+- Parameter edits are validated against the component Zod schema before they
+  reach the design.
+- Undo/redo snapshots the architecture; a full drag counts as one change.
+- The top bar reports monthly cost and graph validity. Invalid designs explain
+  the first issues before a run is allowed.
+
+Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
+`Ctrl/Cmd+D` duplicate, `Delete`/`Backspace` remove, `Escape` clear selection.
 
 ## Engine at a glance
 
@@ -102,7 +122,10 @@ for deliberate trade-offs.
 ## Performance notes
 
 - Every route page is lazy-loaded behind a shared `<Suspense>` fallback.
-- Vite splits React, React Router, Base UI, and icons into stable vendor chunks.
+- Vite splits React, React Router, React Flow, Base UI, and icons into stable
+  vendor chunks.
+- Palette items are memoized, editor callbacks are stable, and React Flow only
+  renders visible nodes.
 - Static top-level data (navigation, palette, toast configuration) is defined
   outside render functions.
 - The simulation engine is headless and can later move to a Web Worker without

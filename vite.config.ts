@@ -24,6 +24,10 @@ export default defineConfig({
             return "router";
           }
 
+          if (id.includes("@xyflow")) {
+            return "flow";
+          }
+
           if (id.includes("@base-ui") || id.includes("sonner")) {
             return "ui";
           }

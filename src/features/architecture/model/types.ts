@@ -23,6 +23,10 @@ export const NODE_KINDS = [
 
 export type NodeKind = (typeof NODE_KINDS)[number];
 
+export function isNodeKind(value: string): value is NodeKind {
+  return (NODE_KINDS as readonly string[]).includes(value);
+}
+
 export type NodeId = string & { readonly __brand: "NodeId" };
 export type EdgeId = string & { readonly __brand: "EdgeId" };
 
