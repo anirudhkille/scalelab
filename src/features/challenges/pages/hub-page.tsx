@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Zap } from "lucide-react";
 import { Link } from "react-router";
 
 import { Badge } from "@/shared/ui/badge";
@@ -9,16 +9,16 @@ import { CHALLENGES } from "../data/catalog";
 
 const ROADMAP = [
   {
-    icon: Save,
-    title: "Saved progress",
-    milestone: "M6",
-    body: "Keep designs and attempt history locally, with import, export, and reset.",
+    icon: Zap,
+    title: "Failure injection",
+    milestone: "Phase 2",
+    body: "Kill nodes, slow storage, and simulate an availability zone outage, with availability scoring.",
   },
   {
-    icon: Sparkles,
-    title: "Polish and launch",
-    milestone: "M7",
-    body: "Onboarding, keyboard help, reduced motion, accessibility, and the final pass.",
+    icon: BookOpen,
+    title: "More ways to learn",
+    milestone: "Phase 2",
+    body: "Challenges 6–9, concept cards, and richer sharing so each failure becomes a lesson.",
   },
 ] as const satisfies readonly RoadmapItem[];
 
@@ -27,7 +27,7 @@ export function HubPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Challenges + reports · M5
+          Polish + launch · M7
         </Badge>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
@@ -80,11 +80,12 @@ export function HubPage() {
           What comes next
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Failure reports and the challenge catalogue are in. Persistence and polish are next.
+          The full MVP loop is in. The next phase adds failure injection, more challenges, and
+          concept cards.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {ROADMAP.map((item) => (
-            <RoadmapCard key={item.milestone} item={item} />
+            <RoadmapCard key={item.title} item={item} />
           ))}
         </div>
       </section>

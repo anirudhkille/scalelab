@@ -30,7 +30,11 @@ fetch.
 - **M6 — persistence + saved progress**: versioned local storage for designs,
   attempts, hints, and settings, corrupt-data backups, export/import/reset,
   attempt comparison and design restore, plus streaks and concept tracking.
-- **Next**: M7 polish and launch.
+- **M7 — polish + launch**: a three-step first-visit tour, keyboard shortcuts
+  help, skip link and focus pass, reduced-motion-aware transitions, and
+  launch-ready documentation.
+- **Next**: Phase 2 — failure injection, availability scoring, more challenges,
+  and concept cards.
 
 The workspace at `/challenge/:id` now runs a complete challenge loop: design,
 run, diagnose, and retry. The engine is also usable headlessly from
@@ -149,6 +153,20 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   compare the previous run and restore that design.
 - Progress also tracks best stars per challenge, completed challenges, practiced
   concepts, and a consecutive-day streak.
+
+## Polish at a glance
+
+- A three-step tour introduces the canvas, load runs, and failure reports on the
+  first visit. Completion is stored with settings, and the tour can be replayed
+  from the shortcuts dialog.
+- Press `?` anywhere outside a text field to open the keyboard shortcuts help.
+- A skip link jumps straight to the workspace, dialogs expose titles and
+  descriptions, icon buttons have accessible names, and focus rings are visible
+  across the header, canvas, and dialogs.
+- Page fades and edge-flow animation respect `prefers-reduced-motion` and the
+  in-app reduced-motion setting.
+- The README and decisions log are part of the milestone: the shipped behavior,
+  known approximations, and local-first constraints are documented together.
 
 ## Engine at a glance
 

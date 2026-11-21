@@ -11,6 +11,7 @@ const SETTINGS: Settings = {
   simSpeed: 1,
   reducedMotion: "system",
   particles: true,
+  onboardingComplete: true,
 };
 
 describe("progress export/import", () => {

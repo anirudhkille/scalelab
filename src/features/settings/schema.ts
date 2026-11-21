@@ -23,6 +23,7 @@ export const settingsSchema = z.object({
   simSpeed: simSpeedSchema,
   reducedMotion: reducedMotionPreferenceSchema,
   particles: z.boolean(),
+  onboardingComplete: z.boolean().default(false),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

@@ -21,6 +21,8 @@ export type SettingsState = {
   setSimSpeed: (speed: SimSpeed) => void;
   setReducedMotion: (preference: ReducedMotionPreference) => void;
   toggleParticles: () => void;
+  completeOnboarding: () => void;
+  restartOnboarding: () => void;
   replaceSettings: (settings: Settings) => void;
   resetSettings: () => void;
 };
@@ -46,6 +48,7 @@ const initialSettings: Settings = {
   simSpeed: 1,
   reducedMotion: "system",
   particles: true,
+  onboardingComplete: false,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -75,6 +78,18 @@ export const useSettingsStore = create<SettingsState>()(
       toggleParticles: () => {
         set((state) => {
           state.settings.particles = !state.settings.particles;
+        });
+      },
+
+      completeOnboarding: () => {
+        set((state) => {
+          state.settings.onboardingComplete = true;
+        });
+      },
+
+      restartOnboarding: () => {
+        set((state) => {
+          state.settings.onboardingComplete = false;
         });
       },
 
