@@ -142,9 +142,6 @@ export function WorkspaceTopbar({
       </Button>
       <span className="text-muted-foreground">/</span>
       <h1 className="text-sm font-medium">{challenge.title}</h1>
-      <Badge variant="outline" className="font-mono text-[10px] tracking-wider uppercase">
-        Editor · Phase 2/3
-      </Badge>
       <Badge variant="outline" className={STATUS_CLASS[status]} aria-live="polite">
         {STATUS_LABEL[status]}
       </Badge>
