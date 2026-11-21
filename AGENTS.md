@@ -24,12 +24,15 @@ bun run typecheck
 bun run lint
 bun run format
 bun run test
+bun run test:e2e
 ```
 
-Run `bun run format`, `bun run typecheck`, `bun run lint`, and `bun run test` before claiming a milestone is complete.
+Run `bun run format`, `bun run typecheck`, `bun run lint`, and `bun run test` before claiming a milestone is complete. Run `bun run test:e2e` when the workspace main flow changes; install the browser once with `bunx playwright install chromium`.
 
 ## Source layout
 
+- `.github/workflows/ci.yml` — PR gate: lint, typecheck, Vitest, build, and Playwright smoke.
+- `e2e/` — Playwright smoke tests for the main workspace flow.
 - `src/app/` — composition root only: providers, router, layouts, and app-level fallback pages (`app/pages/`).
 - `src/features/<name>/` — one domain per folder, with its own pages, components, store, hooks, types, schemas, and tests.
   - Route screens live in `features/<name>/pages/` and are exported from that feature's `index.ts`. There is no top-level `src/routes/`.

@@ -56,9 +56,10 @@ run, diagnose, and retry. The engine is also usable headlessly from
 | Routing     | React Router v8 (routes are code-split with `React.lazy`) |
 | State       | Zustand + Immer, Zod 4 schemas                            |
 | Simulation  | Pure TypeScript engine, no React or DOM imports           |
-| Testing     | Vitest, Testing Library, jsdom                            |
+| Testing     | Vitest, Testing Library, jsdom, Playwright                |
 | Lint/format | oxlint, custom convention check, Prettier                 |
 | Package mgr | bun                                                       |
+| CI          | GitHub Actions: lint, typecheck, test, build, e2e         |
 
 ## Commands
 
@@ -70,11 +71,18 @@ bun run typecheck
 bun run lint
 bun run format
 bun run test
+bun run test:e2e
 ```
 
 Run `bun run format`, `typecheck`, `lint`, and `test` before calling a milestone
 complete. `bun run lint` includes `scripts/check-conventions.mjs`, which enforces
 the type and feature-boundary rules that oxlint does not cover.
+
+`bun run test:e2e` runs one Playwright smoke test against a local Vite server. On
+a fresh machine, install the browser once with `bunx playwright install chromium`.
+
+GitHub Actions runs lint, typecheck, unit tests, build, and the Playwright smoke
+test on every pull request and on pushes to `main`.
 
 ## Source layout
 
