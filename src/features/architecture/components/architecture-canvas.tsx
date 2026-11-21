@@ -248,7 +248,7 @@ export function ArchitectureCanvas({
   return (
     <div
       data-scalelab-canvas
-      className="relative h-full min-h-[420px] w-full bg-canvas-bg"
+      className="relative h-full min-h-105 w-full bg-canvas-bg"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >

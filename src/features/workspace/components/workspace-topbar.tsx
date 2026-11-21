@@ -150,7 +150,7 @@ export function WorkspaceTopbar({
             Speed
           </span>
           <Select items={SPEED_ITEMS} value={String(speed)} onValueChange={handleSpeedChange}>
-            <SelectTrigger size="sm" className="w-[74px]" aria-label="Simulation speed">
+            <SelectTrigger size="sm" className="w-18.5" aria-label="Simulation speed">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

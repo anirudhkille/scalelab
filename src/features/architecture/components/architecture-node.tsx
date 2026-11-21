@@ -74,7 +74,7 @@ function ArchitectureNodeComponent({ data, selected }: NodeProps<ArchitectureFlo
     <article
       aria-label={`${data.label} — ${catalog.label}`}
       className={cn(
-        "relative flex h-[148px] w-[220px] flex-col rounded-xl border bg-card px-3 py-2.5 text-left shadow-sm transition-[border-color,box-shadow]",
+        "relative flex h-37 w-55 flex-col rounded-xl border bg-card px-3 py-2.5 text-left shadow-sm transition-[border-color,box-shadow]",
         selected
           ? "border-ring shadow-md ring-2 ring-ring/35"
           : cn(HEALTH_BORDER[level], "hover:border-ring/45"),
