@@ -1,6 +1,6 @@
 import { assertNever } from "@/shared/lib/assert-never";
 
-import type { NodeKind } from "@/features/architecture";
+import type { NodeKind } from "@/features/architecture/model";
 
 import type { NodeBehavior } from "../types";
 import { appServerBehavior } from "./app-server";

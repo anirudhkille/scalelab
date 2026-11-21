@@ -1,4 +1,4 @@
-import { trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture/model";
 
 import { APP_SERVER_QUEUE_LIMIT_SEC, STATEFUL_SESSION_PENALTY_RATIO } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";

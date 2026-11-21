@@ -1,5 +1,4 @@
 /* oxlint-disable unicorn/require-post-message-target-origin -- dedicated worker scope has no origin */
-import { formatGraphIssue } from "@/features/architecture";
 import type { SimSpeed } from "@/features/settings";
 
 import { createSimulationEngine } from "../engine";
@@ -71,9 +70,10 @@ function start(message: RunnerStartMessage): void {
 
   const setup = createSimulationEngine(message.architecture, message.config);
   if (!setup.ok) {
+    const count = setup.issues.length;
     post({
       type: "error",
-      message: setup.issues.map(formatGraphIssue).join(" "),
+      message: `The design is invalid (${count} ${count === 1 ? "issue" : "issues"}). Fix the graph and try again.`,
     });
     return;
   }

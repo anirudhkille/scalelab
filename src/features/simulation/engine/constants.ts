@@ -1,4 +1,4 @@
-import type { DatabaseInstanceSize, ReplicationMode } from "@/features/architecture";
+import type { DatabaseInstanceSize, ReplicationMode } from "@/features/architecture/model";
 
 /**
  * Tunable simulation constants.

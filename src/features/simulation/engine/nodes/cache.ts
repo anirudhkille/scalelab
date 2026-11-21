@@ -1,4 +1,4 @@
-import { clampRatio, trafficTotal, type TrafficRate } from "@/features/architecture";
+import { clampRatio, trafficTotal, type TrafficRate } from "@/features/architecture/model";
 
 import {
   CACHE_BASE_LATENCY_MS,

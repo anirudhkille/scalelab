@@ -1,4 +1,4 @@
-import { trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture/model";
 
 import { LOAD_BALANCER_QUEUE_LIMIT_SEC } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";

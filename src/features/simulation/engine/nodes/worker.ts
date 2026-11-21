@@ -1,4 +1,4 @@
-import { trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture/model";
 
 import { WORKER_BASE_LATENCY_MS, WORKER_QUEUE_LIMIT_SEC } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";

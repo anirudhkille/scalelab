@@ -2,7 +2,7 @@ import {
   trafficTotal,
   type ComponentParamsByKind,
   type TrafficRate,
-} from "@/features/architecture";
+} from "@/features/architecture/model";
 
 import {
   DATABASE_BASE_LATENCY_MS,

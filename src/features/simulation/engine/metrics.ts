@@ -1,4 +1,4 @@
-import { clampRatio } from "@/features/architecture";
+import { clampRatio } from "@/features/architecture/model";
 
 import { P95_UTILIZATION_EXPONENT, P95_UTILIZATION_MULTIPLIER } from "./constants";
 import type { NodeSnapshot, RunMetrics } from "../types";

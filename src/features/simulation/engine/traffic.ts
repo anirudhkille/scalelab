@@ -6,7 +6,7 @@ import {
   type LoadBalancerAlgorithm,
   type TrafficClass,
   type TrafficRate,
-} from "@/features/architecture";
+} from "@/features/architecture/model";
 
 import { IP_HASH_SKEW_RATIO } from "./constants";
 import type { EdgeFlow } from "./types";

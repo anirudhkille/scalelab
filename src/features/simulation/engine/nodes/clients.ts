@@ -1,4 +1,4 @@
-import { trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture/model";
 
 import { distributeTraffic } from "../traffic";
 import type { NodeBehavior } from "../types";

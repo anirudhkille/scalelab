@@ -4,7 +4,7 @@ import {
   type ArchEdge,
   type LoadBalancerAlgorithm,
   type TrafficRate,
-} from "@/features/architecture";
+} from "@/features/architecture/model";
 
 import { EPSILON_RPS } from "../constants";
 import { distributeTraffic, type TrafficDistribution } from "../traffic";

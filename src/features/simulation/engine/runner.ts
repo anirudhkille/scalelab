@@ -10,7 +10,7 @@ import {
   type EdgeId,
   type NodeId,
   type TrafficRate,
-} from "@/features/architecture";
+} from "@/features/architecture/model";
 import type { ChallengeRequirements } from "@/features/challenges";
 
 import {

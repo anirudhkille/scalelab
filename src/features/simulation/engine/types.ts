@@ -5,7 +5,7 @@ import type {
   GraphIssue,
   NodeId,
   TrafficRate,
-} from "@/features/architecture";
+} from "@/features/architecture/model";
 
 import type { ChallengeRequirements } from "@/features/challenges";
 

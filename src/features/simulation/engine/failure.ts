@@ -1,4 +1,4 @@
-import type { Architecture, NodeId } from "@/features/architecture";
+import type { Architecture, NodeId } from "@/features/architecture/model";
 import type { ChallengeRequirements } from "@/features/challenges";
 
 import { CACHE_UNDERSIZED_HIT_RATIO, EPSILON_RPS, SATURATION_THRESHOLD_RATIO } from "./constants";

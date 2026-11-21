@@ -1,4 +1,4 @@
-import { trafficTotal, type NodeKind } from "@/features/architecture";
+import { trafficTotal, type NodeKind } from "@/features/architecture/model";
 
 import { EPSILON_RPS, PLACEHOLDER_LATENCY_MS } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";

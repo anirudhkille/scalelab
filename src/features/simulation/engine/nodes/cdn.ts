@@ -1,4 +1,4 @@
-import { trafficTotal, type TrafficRate } from "@/features/architecture";
+import { trafficTotal, type TrafficRate } from "@/features/architecture/model";
 
 import { CDN_BASE_LATENCY_MS, CDN_CAPACITY_RPS, CDN_QUEUE_LIMIT_SEC } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";

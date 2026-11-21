@@ -182,7 +182,15 @@ function checkImports(file, source) {
       continue;
     }
 
-    if (currentFeature && currentFeature !== targetFeature && deepPath.length > 0) {
+    const isArchitectureModel =
+      targetFeature === "architecture" && deepPath.length === 1 && deepPath[0] === "model";
+
+    if (
+      currentFeature &&
+      currentFeature !== targetFeature &&
+      deepPath.length > 0 &&
+      !isArchitectureModel
+    ) {
       fail(
         file,
         line,
