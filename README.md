@@ -14,8 +14,10 @@ fetch.
 - **M1 — engine core**: rate-based simulation, graph validation, topology sort,
   clients/load-balancer/app-server behaviors, failure detection, deterministic
   run controller, and engine tests.
-- **Next**: M2 component behaviors (cache, database, queue, worker, CDN, …) and
-  M3 canvas editing.
+- **M2 — data components + diagnosis**: cache warm-up and hit ratios, database
+  replicas/shards/storage, queue and worker backpressure, CDN absorption,
+  three-scenario root-cause attribution, and 16 diagnosis rule templates.
+- **Next**: M3 canvas editing.
 
 The workspace UI is still a scaffold. The engine is usable from
 `@/features/simulation` and has a developer page at `/dev/engine`.
@@ -59,7 +61,7 @@ src/
 │  ├─ challenges/    challenge schemas and hub page
 │  ├─ simulation/    engine, runner, pages
 │  ├─ playback/      live visualization (M4)
-│  ├─ diagnosis/     failure explanations (M5)
+│  ├─ diagnosis/     failure attribution rules and explanations
 │  ├─ progress/      attempts and scoring
 │  ├─ settings/      themes, preferences, persistence
 │  ├─ workspace/     workspace composition
@@ -85,9 +87,14 @@ The engine models traffic as fluid rates with `dt = 0.1s`:
   rate, dropped rate, utilization, and latency.
 - Load-balancers split traffic evenly or by weight; app servers scale with
   instances × requests per instance.
+- Caches use a diminishing-returns hit ratio and a 20-second cold-start ramp.
+  Databases separate read and write capacity, add replicas and shards, and
+  enforce per-shard storage. Queues absorb writes until workers drain them.
 - Failures must persist for 3 simulated seconds: error rate, p95 SLO, queue
   overflow, storage exhaustion, or a run timeout.
-- The root cause is the upstream-most saturated node.
+- Root-cause attribution walks past symptoms; an undersized cache is blamed
+  before the database overflow it causes. `diagnoseFailure` turns the result
+  into a plain-English report with a nudge.
 
 See [`ENGINE.md`](./ENGINE.md) for the model and [`DECISIONS.md`](./DECISIONS.md)
 for deliberate trade-offs.

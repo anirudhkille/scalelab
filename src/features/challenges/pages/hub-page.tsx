@@ -32,7 +32,7 @@ export function HubPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Engine core · M1
+          Data components · M2
         </Badge>
         <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>

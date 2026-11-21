@@ -4,6 +4,7 @@ import {
   monthlyCostUsd,
   trafficFromLoad,
   trafficTotal,
+  type ArchNode,
   type Architecture,
   type NodeId,
   type TrafficRate,
@@ -20,6 +21,7 @@ import {
 } from "./constants";
 import { detectFailure } from "./failure";
 import { usersAtTime } from "./load-profile";
+import { databaseStorageExceeded } from "./nodes/database";
 import { computeRunMetrics } from "./metrics";
 import { nodeBehaviorFor } from "./nodes";
 import type {
@@ -80,10 +82,22 @@ export function createSimulationEngine(
   const dtSec = config.dtSec ?? ENGINE_DT_SEC;
   const maxSimulatedSec = config.maxSimulatedSec ?? DEFAULT_MAX_SIMULATED_SEC;
   const monthlyCost = graph.nodes.reduce((total, node) => total + monthlyCostUsd(node.params), 0);
+  const storageExhaustedNodeIds = graph.nodes
+    .filter(
+      (node) =>
+        node.params.kind === "database" &&
+        databaseStorageExceeded(node.params, requirements.dataSizeGb),
+    )
+    .map((node) => node.id);
 
   const queues = new Map<NodeId, number>();
+  const upstreamNodesById = new Map<NodeId, readonly ArchNode[]>();
   for (const node of graph.nodes) {
     queues.set(node.id, 0);
+    const upstreamNodes = (graph.incomingById.get(node.id) ?? [])
+      .map((edge) => graph.nodeById.get(edge.source))
+      .filter((candidate): candidate is ArchNode => candidate !== undefined);
+    upstreamNodesById.set(node.id, upstreamNodes);
   }
 
   let timeSec = 0;
@@ -126,6 +140,9 @@ export function createSimulationEngine(
         node,
         incoming,
         outgoingEdges: graph.outgoingById.get(node.id) ?? [],
+        upstreamNodes: upstreamNodesById.get(node.id) ?? [],
+        requirements,
+        timeSec,
         dtSec,
         queueDepth: queues.get(node.id) ?? 0,
       });
@@ -138,6 +155,7 @@ export function createSimulationEngine(
         servedRps: result.servedRps,
         droppedRps: result.droppedRps,
         latencyMs: result.latencyMs,
+        ...(result.hitRatio === undefined ? {} : { hitRatio: result.hitRatio }),
       });
 
       for (const flow of result.outputs) {
@@ -180,6 +198,8 @@ export function createSimulationEngine(
       metrics,
       nodes,
       order: graph.order,
+      architecture,
+      storageExhaustedNodeIds,
     });
 
     if (breach) {

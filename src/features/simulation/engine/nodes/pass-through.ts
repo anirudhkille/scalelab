@@ -1,68 +1,77 @@
-import { scaleTraffic, trafficTotal, type ArchNode, type NodeKind } from "@/features/architecture";
+import { trafficTotal, type NodeKind } from "@/features/architecture";
 
 import { EPSILON_RPS, PLACEHOLDER_LATENCY_MS } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";
-import { distributeTraffic } from "../traffic";
 import type { NodeBehavior } from "../types";
+import { distributeForwarded } from "./shared";
 
-function baseLatencyMs(kind: NodeKind): number {
+type PassThroughKind = "dns" | "apiGateway" | "rateLimiter" | "objectStorage";
+
+const PASS_THROUGH_KINDS: ReadonlySet<NodeKind> = new Set([
+  "dns",
+  "apiGateway",
+  "rateLimiter",
+  "objectStorage",
+]);
+
+function isPassThroughKind(kind: NodeKind): kind is PassThroughKind {
+  return PASS_THROUGH_KINDS.has(kind);
+}
+
+function baseLatencyMs(kind: PassThroughKind): number {
   switch (kind) {
     case "dns":
       return PLACEHOLDER_LATENCY_MS.dns;
-    case "cdn":
-      return PLACEHOLDER_LATENCY_MS.cdn;
     case "apiGateway":
       return PLACEHOLDER_LATENCY_MS.apiGateway;
     case "rateLimiter":
       return PLACEHOLDER_LATENCY_MS.rateLimiter;
-    case "cache":
-      return PLACEHOLDER_LATENCY_MS.cache;
-    case "database":
-      return PLACEHOLDER_LATENCY_MS.database;
-    case "queue":
-      return PLACEHOLDER_LATENCY_MS.queue;
-    case "worker":
-      return PLACEHOLDER_LATENCY_MS.worker;
     case "objectStorage":
       return PLACEHOLDER_LATENCY_MS.objectStorage;
-    case "clients":
-    case "loadBalancer":
-    case "appServer":
-      return 0;
   }
 }
 
-function finiteCapacityRps(node: ArchNode): number | null {
-  switch (node.params.kind) {
+function finiteCapacityRps(kind: PassThroughKind, nodeCapacity: number | null): number | null {
+  switch (kind) {
     case "apiGateway":
-      return node.params.limitRps;
     case "rateLimiter":
-      return node.params.limitRps;
-    default:
+      return nodeCapacity;
+    case "dns":
+    case "objectStorage":
       return null;
   }
 }
 
 /**
- * M1 placeholder behavior for kinds that get a full model in M2.
+ * Remaining low-detail nodes.
  *
- * Gateway and rate limiter already enforce their capacity. Everything else is
- * an unlimited pass-through with a representative latency so designs remain
- * runnable while the deeper behaviors are built.
+ * DNS and object storage are effectively unlimited. Gateway and rate limiter
+ * enforce `limitRps` and drop excess traffic.
  */
 export const passThroughBehavior: NodeBehavior = (context) => {
+  const kind = context.node.params.kind;
+  if (!isPassThroughKind(kind)) {
+    throw new Error(`passThroughBehavior received unsupported node kind: ${kind}`);
+  }
+
   const incomingRps = trafficTotal(context.incoming);
-  const capacity = finiteCapacityRps(context.node);
-  const latencyMs = baseLatencyMs(context.node.params.kind);
+  const limitRps =
+    context.node.params.kind === "apiGateway" || context.node.params.kind === "rateLimiter"
+      ? context.node.params.limitRps
+      : null;
+  const capacity = finiteCapacityRps(kind, limitRps);
+  const latencyMs = baseLatencyMs(kind);
 
   if (capacity === null) {
-    const distribution = distributeTraffic(context.incoming, context.outgoingEdges, "roundRobin");
-    const unroutedRps = context.outgoingEdges.length > 0 ? trafficTotal(distribution.unrouted) : 0;
+    const { distribution, droppedRps } = distributeForwarded(
+      context.incoming,
+      context.outgoingEdges,
+    );
 
     return {
       outputs: distribution.flows,
       servedRps: incomingRps,
-      droppedRps: unroutedRps,
+      droppedRps,
       queueDepth: 0,
       maxQueueDepth: 0,
       utilizationRatio: 0,
@@ -81,14 +90,17 @@ export const passThroughBehavior: NodeBehavior = (context) => {
   });
 
   const servedRatio = incomingRps > EPSILON_RPS ? queue.servedRps / incomingRps : 0;
-  const servedTraffic = scaleTraffic(context.incoming, servedRatio);
-  const distribution = distributeTraffic(servedTraffic, context.outgoingEdges, "roundRobin");
-  const unroutedRps = context.outgoingEdges.length > 0 ? trafficTotal(distribution.unrouted) : 0;
+  const accepted = {
+    read: context.incoming.read * servedRatio,
+    write: context.incoming.write * servedRatio,
+    static: context.incoming.static * servedRatio,
+  };
+  const { distribution, droppedRps } = distributeForwarded(accepted, context.outgoingEdges);
 
   return {
     outputs: distribution.flows,
     servedRps: queue.servedRps,
-    droppedRps: queue.droppedRps + unroutedRps,
+    droppedRps: queue.droppedRps + droppedRps,
     queueDepth: queue.queueDepth,
     maxQueueDepth: queue.maxQueueDepth,
     utilizationRatio: queue.utilizationRatio,

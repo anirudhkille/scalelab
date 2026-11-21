@@ -1,3 +1,5 @@
+import type { DatabaseInstanceSize, ReplicationMode } from "@/features/architecture";
+
 /**
  * Tunable simulation constants.
  *
@@ -37,19 +39,77 @@ export const SATURATION_THRESHOLD_RATIO = 0.95;
 /** ipHash sends a little extra traffic to one bucket to model skew. */
 export const IP_HASH_SKEW_RATIO = 0.2;
 
+/** Cache hit ratio = (memory / working set)^0.6 * 0.98, capped at 0.98. */
+export const CACHE_HIT_RATIO_EXPONENT = 0.6;
+export const CACHE_HIT_RATIO_CEILING = 0.98;
+
+/** A cold cache needs this long to reach its steady hit ratio. */
+export const CACHE_WARMUP_SEC = 20;
+
+/** Below this steady hit ratio, a cache is treated as undersized in diagnosis. */
+export const CACHE_UNDERSIZED_HIT_RATIO = 0.5;
+
+/** Per-cache-node service capacity for reads that hit. */
+export const CACHE_CAPACITY_RPS = 80_000;
+export const CACHE_QUEUE_LIMIT_SEC = 1;
+export const CACHE_BASE_LATENCY_MS = 1;
+
+/** CDN capacity is illustrative; the interesting limit is its hit ratio. */
+export const CDN_CAPACITY_RPS = 1_000_000;
+export const CDN_QUEUE_LIMIT_SEC = 0.5;
+export const CDN_BASE_LATENCY_MS = 15;
+
+/** Database tier capacities before replicas, shards and replication factors. */
+export const DATABASE_CAPACITY_RPS = {
+  small: { read: 2_000, write: 500 },
+  medium: { read: 8_000, write: 2_000 },
+  large: { read: 30_000, write: 10_000 },
+  xlarge: { read: 100_000, write: 40_000 },
+} as const satisfies Record<
+  DatabaseInstanceSize,
+  { readonly read: number; readonly write: number }
+>;
+
+/** Storage included by one shard at each instance size. */
+export const DATABASE_STORAGE_GB = {
+  small: 100,
+  medium: 500,
+  large: 2_000,
+  xlarge: 8_000,
+} as const satisfies Record<DatabaseInstanceSize, number>;
+
+/** Async replication keeps full write throughput; sync costs ~30%. */
+export const DATABASE_REPLICATION_WRITE_FACTOR = {
+  sync: 0.7,
+  async: 1,
+} as const satisfies Record<ReplicationMode, number>;
+
 /**
- * Latencies for kinds that become fully modeled in M2. Until then they behave
- * as unlimited pass-through nodes so graph authoring is not blocked.
+ * Sharding is not free: the busiest shard receives
+ * `1 + 0.3 * (1 - 1/shards)` of its fair share.
  */
+export const DATABASE_HOT_SHARD_SKEW_RATIO = 0.3;
+
+export const DATABASE_QUEUE_LIMIT_SEC = 2;
+export const DATABASE_BASE_LATENCY_MS = 20;
+
+/** Extra queueing-style latency once the database is close to saturation. */
+export const DATABASE_CONTENTION_LATENCY_MS = 40;
+
+/** A queue shows accepted writes as fast; draining happens asynchronously. */
+export const QUEUE_BASE_LATENCY_MS = 5;
+
+export const WORKER_QUEUE_LIMIT_SEC = 2;
+export const WORKER_BASE_LATENCY_MS = 10;
+
+/** Stateful sessions behind a round-robin LB waste capacity on session affinity. */
+export const STATEFUL_SESSION_PENALTY_RATIO = 0.7;
+
+/** Latencies for kinds that remain pass-through in the MVP. */
 export const PLACEHOLDER_LATENCY_MS = {
   dns: 20,
-  cdn: 15,
   apiGateway: 5,
   rateLimiter: 2,
-  cache: 1,
-  database: 20,
-  queue: 5,
-  worker: 10,
   objectStorage: 40,
 } as const;
 

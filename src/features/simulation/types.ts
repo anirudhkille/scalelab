@@ -10,6 +10,8 @@ export type NodeSnapshot = {
   readonly servedRps: number;
   readonly droppedRps: number;
   readonly latencyMs: number;
+  /** Present for cache and CDN nodes. */
+  readonly hitRatio?: number;
 };
 
 export type RunMetrics = {

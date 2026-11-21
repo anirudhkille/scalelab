@@ -7,6 +7,8 @@ import type {
   TrafficRate,
 } from "@/features/architecture";
 
+import type { ChallengeRequirements } from "@/features/challenges";
+
 import type {
   FailureReason,
   RunOutcome,
@@ -30,6 +32,9 @@ export type NodeBehaviorContext = {
   readonly node: ArchNode;
   readonly incoming: TrafficRate;
   readonly outgoingEdges: readonly ArchEdge[];
+  readonly upstreamNodes: readonly ArchNode[];
+  readonly requirements: ChallengeRequirements;
+  readonly timeSec: number;
   readonly dtSec: number;
   readonly queueDepth: number;
 };
@@ -43,6 +48,8 @@ export type NodeBehaviorResult = {
   readonly utilizationRatio: number;
   readonly latencyMs: number;
   readonly capacityRps: number;
+  /** Cache/CDN hit ratio for this tick, when the component has one. */
+  readonly hitRatio?: number;
 };
 
 export type NodeBehavior = (context: NodeBehaviorContext) => NodeBehaviorResult;

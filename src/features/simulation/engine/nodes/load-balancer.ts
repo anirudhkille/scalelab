@@ -1,9 +1,9 @@
-import { scaleTraffic, trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture";
 
-import { EPSILON_RPS, LOAD_BALANCER_QUEUE_LIMIT_SEC } from "../constants";
+import { LOAD_BALANCER_QUEUE_LIMIT_SEC } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";
-import { distributeTraffic } from "../traffic";
 import type { NodeBehavior } from "../types";
+import { distributeServed } from "./shared";
 
 export const loadBalancerBehavior: NodeBehavior = (context) => {
   if (context.node.params.kind !== "loadBalancer") {
@@ -22,15 +22,17 @@ export const loadBalancerBehavior: NodeBehavior = (context) => {
     dtSec: context.dtSec,
   });
 
-  const servedRatio = incomingRps > EPSILON_RPS ? queue.servedRps / incomingRps : 0;
-  const servedTraffic = scaleTraffic(context.incoming, servedRatio);
-  const distribution = distributeTraffic(servedTraffic, context.outgoingEdges, params.algorithm);
-  const unroutedRps = context.outgoingEdges.length > 0 ? trafficTotal(distribution.unrouted) : 0;
+  const { distribution, droppedRps } = distributeServed(
+    context.incoming,
+    queue.servedRps,
+    context.outgoingEdges,
+    params.algorithm,
+  );
 
   return {
     outputs: distribution.flows,
     servedRps: queue.servedRps,
-    droppedRps: queue.droppedRps + unroutedRps,
+    droppedRps: queue.droppedRps + droppedRps,
     queueDepth: queue.queueDepth,
     maxQueueDepth: queue.maxQueueDepth,
     utilizationRatio: queue.utilizationRatio,

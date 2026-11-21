@@ -1,5 +1,8 @@
 export {
   APP_SERVER_QUEUE_LIMIT_SEC,
+  CACHE_WARMUP_SEC,
+  DATABASE_BASE_LATENCY_MS,
+  DATABASE_QUEUE_LIMIT_SEC,
   DEFAULT_MAX_SIMULATED_SEC,
   ENGINE_DT_SEC,
   FAILURE_WINDOW_SEC,
@@ -10,6 +13,18 @@ export {
 export { detectFailure, type FailureInput } from "./failure";
 export { loadProfileDurationSec, usersAtTime } from "./load-profile";
 export { computeRunMetrics, type MetricsInput } from "./metrics";
+export { cacheHitRatioAtTime, cacheSteadyHitRatio } from "./nodes/cache";
+export {
+  databaseCapacities,
+  databaseStorageExceeded,
+  databaseStorageLimitGb,
+  hotShardCapacityMultiplier,
+  processDatabaseTick,
+  type DatabaseCapacities,
+  type DatabaseParams,
+  type DatabaseTickInput,
+  type DatabaseTickResult,
+} from "./nodes/database";
 export {
   processQueue,
   queueDepthForSeconds,

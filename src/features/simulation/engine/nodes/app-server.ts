@@ -1,9 +1,15 @@
-import { scaleTraffic, trafficTotal } from "@/features/architecture";
+import { trafficTotal } from "@/features/architecture";
 
-import { APP_SERVER_QUEUE_LIMIT_SEC, EPSILON_RPS } from "../constants";
+import { APP_SERVER_QUEUE_LIMIT_SEC, STATEFUL_SESSION_PENALTY_RATIO } from "../constants";
 import { processQueue, queueDepthForSeconds } from "../queue";
-import { distributeTraffic } from "../traffic";
-import type { NodeBehavior } from "../types";
+import type { NodeBehavior, NodeBehaviorContext } from "../types";
+import { distributeServed } from "./shared";
+
+function hasRoundRobinLoadBalancer(context: NodeBehaviorContext): boolean {
+  return context.upstreamNodes.some(
+    (node) => node.params.kind === "loadBalancer" && node.params.algorithm === "roundRobin",
+  );
+}
 
 export const appServerBehavior: NodeBehavior = (context) => {
   if (context.node.params.kind !== "appServer") {
@@ -11,7 +17,11 @@ export const appServerBehavior: NodeBehavior = (context) => {
   }
 
   const params = context.node.params;
-  const capacityRps = Math.max(0, params.instances * params.rpsPerInstance);
+  const sessionPenalty =
+    params.statefulSessions && hasRoundRobinLoadBalancer(context)
+      ? STATEFUL_SESSION_PENALTY_RATIO
+      : 1;
+  const capacityRps = Math.max(0, params.instances * params.rpsPerInstance * sessionPenalty);
   const incomingRps = trafficTotal(context.incoming);
   const queue = processQueue({
     incomingRps,
@@ -22,15 +32,16 @@ export const appServerBehavior: NodeBehavior = (context) => {
     dtSec: context.dtSec,
   });
 
-  const servedRatio = incomingRps > EPSILON_RPS ? queue.servedRps / incomingRps : 0;
-  const servedTraffic = scaleTraffic(context.incoming, servedRatio);
-  const distribution = distributeTraffic(servedTraffic, context.outgoingEdges, "roundRobin");
-  const unroutedRps = context.outgoingEdges.length > 0 ? trafficTotal(distribution.unrouted) : 0;
+  const { distribution, droppedRps } = distributeServed(
+    context.incoming,
+    queue.servedRps,
+    context.outgoingEdges,
+  );
 
   return {
     outputs: distribution.flows,
     servedRps: queue.servedRps,
-    droppedRps: queue.droppedRps + unroutedRps,
+    droppedRps: queue.droppedRps + droppedRps,
     queueDepth: queue.queueDepth,
     maxQueueDepth: queue.maxQueueDepth,
     utilizationRatio: queue.utilizationRatio,
