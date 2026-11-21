@@ -4,6 +4,7 @@ import type { RunOutcome, RunResult, SimulationStep } from "../types";
 
 export const MAX_CHART_SAMPLES = 240;
 export const CHART_SAMPLE_INTERVAL_SEC = 0.5;
+export const MAX_TIMELINE_SAMPLES = 240;
 
 export type RunStatus = "idle" | "running" | "passed" | "failed" | "stopped";
 
@@ -24,6 +25,7 @@ export type RunState = {
   readonly result: RunResult | null;
   readonly outcome: RunOutcome | null;
   readonly history: readonly RunChartSample[];
+  readonly timeline: readonly SimulationStep[];
   readonly error: string | null;
   readonly beginRun: () => void;
   readonly receiveStep: (step: SimulationStep) => void;
@@ -64,12 +66,31 @@ function withSample(
   return [...history, sampleFromStep(step)].slice(-MAX_CHART_SAMPLES);
 }
 
+function withTimeline(
+  timeline: readonly SimulationStep[],
+  step: SimulationStep,
+  force: boolean,
+): readonly SimulationStep[] {
+  const last = timeline[timeline.length - 1];
+
+  if (!force && last && step.timeSec - last.timeSec < CHART_SAMPLE_INTERVAL_SEC) {
+    return timeline;
+  }
+
+  if (last && step.timeSec === last.timeSec) {
+    return force ? [...timeline.slice(0, -1), step] : timeline;
+  }
+
+  return [...timeline, step].slice(-MAX_TIMELINE_SAMPLES);
+}
+
 const initialState = {
   status: "idle" as const,
   step: null,
   result: null,
   outcome: null,
   history: [] as readonly RunChartSample[],
+  timeline: [] as readonly SimulationStep[],
   error: null,
 };
 
@@ -83,6 +104,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
       result: null,
       outcome: null,
       history: [],
+      timeline: [],
       error: null,
     });
   },
@@ -95,6 +117,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
     set((state) => ({
       step,
       history: withSample(state.history, step, false),
+      timeline: withTimeline(state.timeline, step, false),
     }));
   },
 
@@ -105,6 +128,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
       outcome: result.outcome,
       step: result.finalStep,
       history: withSample(state.history, result.finalStep, true),
+      timeline: withTimeline(state.timeline, result.finalStep, true),
     }));
   },
 
@@ -129,6 +153,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
 export const selectRunStatus = (state: RunState): RunStatus => state.status;
 export const selectRunStep = (state: RunState): SimulationStep | null => state.step;
 export const selectRunHistory = (state: RunState): readonly RunChartSample[] => state.history;
+export const selectRunTimeline = (state: RunState): readonly SimulationStep[] => state.timeline;
 export const selectRunOutcome = (state: RunState): RunOutcome | null => state.outcome;
 export const selectRunResult = (state: RunState): RunResult | null => state.result;
 export const selectRunError = (state: RunState): string | null => state.error;

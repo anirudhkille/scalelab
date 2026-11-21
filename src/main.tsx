@@ -19,3 +19,11 @@ createRoot(root).render(
     </AppProviders>
   </StrictMode>,
 );
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Offline support is an enhancement; the app still works without it.
+    });
+  });
+}

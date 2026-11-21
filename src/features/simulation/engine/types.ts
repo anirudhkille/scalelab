@@ -7,7 +7,7 @@ import type {
   TrafficRate,
 } from "@/features/architecture/model";
 
-import type { ChallengeRequirements } from "@/features/challenges";
+import type { ChallengeRequirements, LoadModifiers } from "@/features/challenges";
 
 import type {
   FailureReason,
@@ -37,6 +37,7 @@ export type NodeBehaviorContext = {
   readonly timeSec: number;
   readonly dtSec: number;
   readonly queueDepth: number;
+  readonly loadModifiers?: LoadModifiers;
 };
 
 export type NodeBehaviorResult = {

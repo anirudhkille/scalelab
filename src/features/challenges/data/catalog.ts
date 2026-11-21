@@ -14,6 +14,7 @@ type RawChallenge = {
   readonly id: string;
   readonly title: string;
   readonly difficulty: 1 | 2 | 3 | 4 | 5;
+  readonly pack?: "fundamentals" | "scale" | "consistency" | "resilience";
   readonly concepts: readonly string[];
   readonly briefMd: string;
   readonly requirements: ChallengeRequirements;
@@ -27,6 +28,7 @@ type RawChallenge = {
 const RAW_CHALLENGES = [
   {
     id: "personal-blog",
+    pack: "fundamentals",
     title: "Personal Blog / Portfolio",
     difficulty: 1,
     concepts: ["static assets", "single-server limits", "CDN"],
@@ -71,6 +73,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "url-shortener",
+    pack: "fundamentals",
     title: "URL Shortener",
     difficulty: 2,
     concepts: ["read-heavy traffic", "cache hit ratio", "read replicas"],
@@ -117,6 +120,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "photo-feed",
+    pack: "scale",
     title: "Photo Sharing Feed",
     difficulty: 3,
     concepts: ["static media", "CDN", "object storage", "feed cache"],
@@ -174,6 +178,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "chat-notifications",
+    pack: "consistency",
     title: "Chat / Notifications",
     difficulty: 4,
     concepts: ["write-heavy traffic", "queues", "workers", "backpressure"],
@@ -231,6 +236,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "flash-sale",
+    pack: "resilience",
     title: "E-commerce Flash Sale",
     difficulty: 5,
     concepts: ["step load", "cache", "queues", "rate limiting"],
@@ -280,6 +286,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "ride-hailing",
+    pack: "consistency",
     title: "Ride Hailing Locations",
     difficulty: 3,
     concepts: ["write-heavy traffic", "hot data", "sharding", "cache"],
@@ -327,6 +334,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "video-streaming",
+    pack: "scale",
     title: "Video Streaming",
     difficulty: 3,
     concepts: ["static media", "CDN hit ratio", "object storage", "bandwidth"],
@@ -375,6 +383,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "timeline-fanout",
+    pack: "scale",
     title: "Twitter-like Timeline",
     difficulty: 4,
     concepts: ["fan-out", "write amplification", "queues", "timeline cache"],
@@ -423,6 +432,7 @@ const RAW_CHALLENGES = [
   },
   {
     id: "rate-limited-api",
+    pack: "resilience",
     title: "Rate-limited Public API",
     difficulty: 5,
     concepts: ["API gateway", "rate limiting", "cache", "read replicas"],
@@ -467,6 +477,153 @@ const RAW_CHALLENGES = [
       "Place rate limiting before expensive work.",
       "Size gateway and limiter capacity above expected load.",
       "Protect a read-heavy API with a cache and replica capacity.",
+    ],
+  },
+  {
+    id: "payments",
+    pack: "consistency",
+    title: "Payments Ledger",
+    difficulty: 4,
+    concepts: ["write consistency", "sync replication", "idempotency", "backpressure"],
+    briefMd:
+      "A payment is a write that must not be lost or applied twice. Traffic ramps with a burst of checkout retries, so the ledger needs synchronous durability, idempotent requests, and a front door that sheds abuse before it reaches the primary.",
+    requirements: {
+      targetUsers: 400,
+      requestsPerUserPerSec: 3,
+      readRatio: 0.55,
+      staticRatio: 0.02,
+      workingSetGb: 2,
+      dataSizeGb: 50,
+      latencyP95Ms: 250,
+      maxErrorRatio: 0.001,
+      availabilityRatio: 0.999,
+      monthlyBudgetUsd: 1_200,
+    },
+    loadProfile: [
+      { durationSec: 60, fromUsers: 0, toUsers: 800 },
+      { durationSec: 30, fromUsers: 800, toUsers: 800 },
+    ],
+    allowedComponents: [
+      "clients",
+      "dns",
+      "loadBalancer",
+      "apiGateway",
+      "rateLimiter",
+      "appServer",
+      "cache",
+      "database",
+      "queue",
+      "worker",
+      "objectStorage",
+    ],
+    hints: [
+      "Which write must finish before the client sees a success?",
+      "Where should a duplicate retry be stopped before it becomes a second charge?",
+      "Use synchronous replication for the ledger and push receipts or notifications off the request path.",
+    ],
+    learningGoals: [
+      "Separate the durable write path from asynchronous side effects.",
+      "See the write-capacity cost of synchronous replication.",
+      "Size request-idempotency and rate limiting before the database.",
+    ],
+  },
+  {
+    id: "notifications",
+    pack: "scale",
+    title: "Notifications Fan-out",
+    difficulty: 3,
+    concepts: ["fan-out", "queues", "worker scaling", "retry safety"],
+    briefMd:
+      "One event can fan out into millions of pushes, emails, and in-app messages. The ingest path must stay fast while delivery happens asynchronously, with workers that can drain a backlog without sending the same message twice.",
+    requirements: {
+      targetUsers: 700,
+      requestsPerUserPerSec: 2,
+      readRatio: 0.4,
+      staticRatio: 0.05,
+      workingSetGb: 2,
+      dataSizeGb: 100,
+      latencyP95Ms: 300,
+      maxErrorRatio: 0.01,
+      availabilityRatio: 0.995,
+      monthlyBudgetUsd: 1_700,
+    },
+    loadProfile: [
+      { durationSec: 60, fromUsers: 0, toUsers: 1_400 },
+      { durationSec: 30, fromUsers: 1_400, toUsers: 1_400 },
+    ],
+    allowedComponents: [
+      "clients",
+      "dns",
+      "cdn",
+      "loadBalancer",
+      "apiGateway",
+      "rateLimiter",
+      "appServer",
+      "cache",
+      "database",
+      "queue",
+      "worker",
+      "objectStorage",
+      "searchIndex",
+    ],
+    hints: [
+      "Does the sender need to wait for every channel to deliver?",
+      "What absorbs a burst when channel providers are slower than ingest?",
+      "Queue the fan-out, scale workers for delivery, and keep the subscription store off the hot path.",
+    ],
+    learningGoals: [
+      "Decouple ingest latency from delivery latency.",
+      "Size a queue and workers for burst absorption.",
+      "Reason about duplicate delivery and dead-letter handling.",
+    ],
+  },
+  {
+    id: "global-service",
+    pack: "resilience",
+    title: "Global Multi-region Service",
+    difficulty: 5,
+    concepts: ["multi-region", "latency budget", "cache locality", "home-region writes"],
+    briefMd:
+      "Users are spread across three continents, and a round trip to a single region blows the latency target. Serve reads near the user, keep the write path honest about its home region, and prove the design still has headroom at twice the target load.",
+    requirements: {
+      targetUsers: 600,
+      requestsPerUserPerSec: 2.5,
+      readRatio: 0.8,
+      staticRatio: 0.1,
+      workingSetGb: 6,
+      dataSizeGb: 200,
+      latencyP95Ms: 350,
+      maxErrorRatio: 0.01,
+      availabilityRatio: 0.999,
+      monthlyBudgetUsd: 2_400,
+    },
+    loadProfile: [
+      { durationSec: 60, fromUsers: 0, toUsers: 1_200 },
+      { durationSec: 30, fromUsers: 1_200, toUsers: 1_200 },
+    ],
+    allowedComponents: [
+      "clients",
+      "dns",
+      "cdn",
+      "loadBalancer",
+      "apiGateway",
+      "rateLimiter",
+      "appServer",
+      "cache",
+      "database",
+      "queue",
+      "worker",
+      "objectStorage",
+    ],
+    hints: [
+      "Every cross-region hop spends part of the p95 budget.",
+      "Which reads can be answered from a local cache, and which writes must go home?",
+      "Place an app tier and cache in each region, then send cache misses and writes to the primary store.",
+    ],
+    learningGoals: [
+      "Budget cross-region latency instead of ignoring it.",
+      "Serve reads locally while keeping one write home region.",
+      "Compare regional duplication against the monthly budget.",
     ],
   },
 ] as const satisfies readonly RawChallenge[];

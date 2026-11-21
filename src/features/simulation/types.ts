@@ -1,5 +1,10 @@
 import type { EdgeId, NodeId } from "@/features/architecture";
-import type { ChallengeRequirements, FailureEvent, LoadStage } from "@/features/challenges";
+import type {
+  ChallengeRequirements,
+  FailureEvent,
+  LoadModifiers,
+  LoadStage,
+} from "@/features/challenges";
 
 export type { LoadStage };
 
@@ -26,6 +31,8 @@ export type RunMetrics = {
   readonly monthlyCostUsd: number;
   /** Fraction of elapsed time the system answered within the error budget. */
   readonly availabilityRatio?: number;
+  /** Retry feedback multiplier applied to offered load; 1 when retries are off. */
+  readonly retryAmplification?: number;
 };
 
 export type EdgeSnapshot = {
@@ -69,6 +76,8 @@ export type SimulationConfig = {
   readonly maxSimulatedSec?: number;
   /** Timed failure injections applied during the run. */
   readonly failureScenarios?: readonly FailureEvent[];
+  /** Optional harsh-load modifiers: retries, waves, hot keys, cache flushes. */
+  readonly loadModifiers?: LoadModifiers;
 };
 
 export type RunResult = {

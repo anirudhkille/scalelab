@@ -16,6 +16,7 @@ export const NODE_KINDS = [
   "appServer",
   "cache",
   "database",
+  "searchIndex",
   "queue",
   "worker",
   "objectStorage",

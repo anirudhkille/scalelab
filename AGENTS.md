@@ -36,7 +36,7 @@ Run `bun run format`, `bun run typecheck`, `bun run lint`, and `bun run test` be
 - `src/app/` — composition root only: providers, router, layouts, and app-level fallback pages (`app/pages/`).
 - `src/features/<name>/` — one domain per folder, with its own pages, components, store, hooks, types, schemas, and tests.
   - Route screens live in `features/<name>/pages/` and are exported from that feature's `index.ts`. There is no top-level `src/routes/`.
-  - `architecture`, `challenges`, `simulation`, `playback`, `diagnosis`, `progress`, `settings`, `workspace`, `learn`.
+  - `architecture`, `challenges`, `simulation`, `playback`, `diagnosis`, `progress`, `interview`, `settings`, `workspace`, `learn`.
 - `src/shared/` — feature-agnostic UI (`shared/ui`), helpers (`shared/lib`), hooks, storage, and cross-feature types.
 - `src/test/` — global test setup and theme-level tests.
 
@@ -45,7 +45,7 @@ Each feature exposes its public API through `src/features/<name>/index.ts`. Impo
 Dependency direction:
 
 ```text
-shared → architecture → challenges → simulation → diagnosis → progress → workspace → app
+shared → architecture → challenges → simulation → diagnosis → progress → interview → workspace → app
 ```
 
 `settings` may be imported anywhere. `playback` may import `simulation` and `architecture`. `workspace` composes features. `simulation/engine` is pure TypeScript: no React, DOM, or Zustand.

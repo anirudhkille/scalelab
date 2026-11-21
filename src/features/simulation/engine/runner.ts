@@ -19,6 +19,8 @@ import {
   ENGINE_DT_SEC,
   EPSILON_RPS,
   FAILURE_WINDOW_SEC,
+  RETRY_PRESSURE_DECAY_PER_SEC,
+  RETRY_PRESSURE_GROWTH_PER_SEC,
   SUCCESS_HOLD_SEC,
   TARGET_REACHED_RATIO,
 } from "./constants";
@@ -87,6 +89,8 @@ export function createSimulationEngine(
   const dtSec = config.dtSec ?? ENGINE_DT_SEC;
   const maxSimulatedSec = config.maxSimulatedSec ?? DEFAULT_MAX_SIMULATED_SEC;
   const failureScenarios = config.failureScenarios ?? [];
+  const loadModifiers = config.loadModifiers;
+  const retryStorm = loadModifiers?.retryStorm;
   const monthlyCost = graph.nodes.reduce((total, node) => total + monthlyCostUsd(node.params), 0);
   const storageExhaustedNodeIds = graph.nodes
     .filter(
@@ -116,9 +120,12 @@ export function createSimulationEngine(
   let lastStep: SimulationStep | null = null;
   let elapsedSec = 0;
   let availableSec = 0;
+  let retryPressure = 0;
 
   function tick(): SimulationStep {
-    const users = usersAtTime(config.loadProfile, timeSec);
+    const retryAmplification = 1 + retryPressure;
+    const users =
+      usersAtTime(config.loadProfile, timeSec, loadModifiers?.trafficWave) * retryAmplification;
     const offered = trafficFromLoad(
       users,
       requirements.requestsPerUserPerSec,
@@ -159,6 +166,7 @@ export function createSimulationEngine(
           timeSec,
           dtSec,
           queueDepth: queues.get(node.id) ?? 0,
+          ...(loadModifiers === undefined ? {} : { loadModifiers }),
         }),
         trafficTotal(incoming),
         effect,
@@ -209,7 +217,25 @@ export function createSimulationEngine(
     // 0.5% errors contributes 99.5% of its duration.
     availableSec += dtSec * (1 - baseMetrics.errorRatio);
     const availabilityRatio = elapsedSec > 0 ? availableSec / elapsedSec : 1;
-    const metrics: RunMetrics = { ...baseMetrics, availabilityRatio };
+    const metrics: RunMetrics = {
+      ...baseMetrics,
+      availabilityRatio,
+      retryAmplification,
+    };
+
+    if (retryStorm?.enabled && retryStorm.maxAttempts > 1) {
+      const ceiling = retryStorm.maxAttempts - 1;
+      if (metrics.errorRatio > 0) {
+        retryPressure = Math.min(
+          ceiling,
+          retryPressure + metrics.errorRatio * ceiling * RETRY_PRESSURE_GROWTH_PER_SEC * dtSec,
+        );
+      } else {
+        retryPressure *= Math.exp(-RETRY_PRESSURE_DECAY_PER_SEC * dtSec);
+      }
+    } else {
+      retryPressure = 0;
+    }
 
     const step: SimulationStep = {
       timeSec,

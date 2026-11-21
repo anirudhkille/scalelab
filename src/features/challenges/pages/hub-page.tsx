@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/button";
 import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
 import { ChallengeCard } from "../components/challenge-card";
 import { CHALLENGES } from "../data/catalog";
+import { CHALLENGE_PACKS, CHALLENGE_PACK_META } from "../packs";
 
 const EXPLORE = [
   {
@@ -73,17 +74,40 @@ export function HubPage() {
               Challenges
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Nine systems, from a static portfolio to a rate-limited public API. Each one has a
-              different bottleneck waiting for you, and later challenges inject failures mid-run.
+              Twelve systems grouped into four packs, from a static portfolio to a global service.
+              Each one has a different bottleneck waiting for you, and later challenges inject
+              failures mid-run.
             </p>
           </div>
           <Badge variant="secondary">{CHALLENGES.length} challenges</Badge>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CHALLENGES.map((challenge) => (
-            <ChallengeCard key={challenge.id} challenge={challenge} />
-          ))}
+        <div className="mt-6 space-y-8">
+          {CHALLENGE_PACKS.map((pack) => {
+            const challenges = CHALLENGES.filter((challenge) => challenge.pack === pack);
+            const meta = CHALLENGE_PACK_META[pack];
+
+            if (challenges.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={pack}>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h3 className="text-sm font-semibold tracking-tight">{meta.label}</h3>
+                  <p className="text-xs text-muted-foreground">{meta.description}</p>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {challenges.length}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {challenges.map((challenge) => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import { CheckCircle2, CircleDollarSign, Gauge, RotateCcw, Users } from "lucide-react";
 
+import type { Architecture } from "@/features/architecture";
 import type { ChallengeRequirements } from "@/features/challenges";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 
 import type { AttemptScore } from "../scoring";
+import { DesignComparison } from "./design-comparison";
 import { StarRating } from "./star-rating";
 
 const NUMBER_FORMAT = new Intl.NumberFormat("en-US");
@@ -46,6 +48,8 @@ type ResultDialogProps = {
   readonly challengeTitle: string;
   readonly requirements: ChallengeRequirements;
   readonly score: AttemptScore;
+  readonly architecture: Architecture;
+  readonly reference: Architecture;
   readonly maxUsersSustained: number;
   readonly costUsd: number;
   readonly onOpenChange: (open: boolean) => void;
@@ -58,6 +62,8 @@ export function ResultDialog({
   challengeTitle,
   requirements,
   score,
+  architecture,
+  reference,
   maxUsersSustained,
   costUsd,
   onOpenChange,
@@ -68,7 +74,7 @@ export function ResultDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-lg bg-health-ok/15 text-health-ok">
@@ -137,6 +143,13 @@ export function ResultDialog({
             {score.availabilityMet ? "Availability met" : "Availability missed"}
           </Badge>
         </div>
+
+        <DesignComparison
+          architecture={architecture}
+          reference={reference}
+          maxUsersSustained={maxUsersSustained}
+          targetUsers={requirements.targetUsers}
+        />
 
         <DialogFooter>
           <Button variant="outline" onClick={onEditDesign}>

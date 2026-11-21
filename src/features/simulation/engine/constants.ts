@@ -96,6 +96,11 @@ export const DATABASE_BASE_LATENCY_MS = 20;
 /** Extra queueing-style latency once the database is close to saturation. */
 export const DATABASE_CONTENTION_LATENCY_MS = 40;
 
+/** Search index shards serve reads; writes pay inverted-index maintenance. */
+export const SEARCH_INDEX_QUEUE_LIMIT_SEC = 1;
+export const SEARCH_INDEX_BASE_LATENCY_MS = 12;
+export const SEARCH_INDEX_MIN_WRITE_COST_RATIO = 0.05;
+
 /** A queue shows accepted writes as fast; draining happens asynchronously. */
 export const QUEUE_BASE_LATENCY_MS = 5;
 
@@ -117,6 +122,13 @@ export const CACHE_WRITE_BACK_LATENCY_MS = 1;
 /** Async replicas trail the primary; reads pay a small staleness-aware latency. */
 export const DATABASE_ASYNC_REPLICATION_LAG_MS = 120;
 export const DATABASE_REPLICATION_LAG_PER_WRITE_MS = 0.02;
+
+/** Retry feedback: pressure grows with the error ratio, then decays when healthy. */
+export const RETRY_PRESSURE_GROWTH_PER_SEC = 4;
+export const RETRY_PRESSURE_DECAY_PER_SEC = 1.2;
+
+/** A fully skewed hot key can leave only this share of nominal capacity usable. */
+export const HOT_KEY_CAPACITY_PENALTY_RATIO = 0.55;
 
 /** Cross-region edges add this much network latency each way. */
 export const CROSS_REGION_LATENCY_MS = 45;

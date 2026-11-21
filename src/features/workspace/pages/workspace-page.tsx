@@ -16,6 +16,7 @@ import {
   type NodeId,
 } from "@/features/architecture";
 import {
+  defaultLoadModifiersFor,
   challengeFor,
   customChallengeToChallenge,
   referenceArchitectureFor,
@@ -24,9 +25,10 @@ import {
   starterArchitectureFor,
   useCustomChallengeStore,
   type Challenge,
+  type LoadModifiers,
 } from "@/features/challenges";
 import { FailureReportDialog, diagnoseFailure, type FailureDiagnosis } from "@/features/diagnosis";
-import { LiveMetricsPanel, ParticleLayer } from "@/features/playback";
+import { LiveMetricsPanel, ParticleLayer, ReplayScrubber } from "@/features/playback";
 import {
   AttemptCompareDialog,
   ResultDialog,
@@ -43,6 +45,7 @@ import {
   selectRunResult,
   selectRunStatus,
   selectRunStep,
+  selectRunTimeline,
   useRunSimulation,
   useRunStore,
   validateFailureScenarios,
@@ -73,6 +76,7 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   const step = useRunStore(selectRunStep);
   const result = useRunStore(selectRunResult);
   const history = useRunStore(selectRunHistory);
+  const timeline = useRunStore(selectRunTimeline);
   const attempts = useAttemptStore(selectAttempts);
   const addAttempt = useAttemptStore((state) => state.addAttempt);
   const saveDesign = useAttemptStore((state) => state.saveDesign);
@@ -82,6 +86,9 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   const simSpeed = useSettingsStore((state) => state.settings.simSpeed);
   const setSimSpeed = useSettingsStore((state) => state.setSimSpeed);
   const [report, setReport] = useState<RunReport | null>(null);
+  const [loadModifiers, setLoadModifiers] = useState<LoadModifiers>(() =>
+    defaultLoadModifiersFor(challenge),
+  );
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [comparePair, setComparePair] = useState<{
     readonly current: AttemptRecord;
@@ -114,6 +121,10 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
   }, [architecture, challenge.id, saveDesign]);
 
   const runConfig = useMemo(() => runConfigForChallenge(challenge), [challenge]);
+  const activeRunConfig = useMemo(
+    () => ({ ...runConfig, loadModifiers }),
+    [loadModifiers, runConfig],
+  );
   const scenarioIssues = useMemo(
     () => validateFailureScenarios(architecture.nodes, runConfig.failureScenarios ?? []),
     [architecture.nodes, runConfig.failureScenarios],
@@ -224,8 +235,8 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
     setDialog(null);
     setReport(null);
     runArchitectureRef.current = architecture;
-    startRun(architecture, runConfig, simSpeed);
-  }, [architecture, runConfig, simSpeed, startRun]);
+    startRun(architecture, activeRunConfig, simSpeed);
+  }, [activeRunConfig, architecture, simSpeed, startRun]);
 
   const handleStop = useCallback(() => {
     stopRun();
@@ -279,6 +290,8 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
         status={status}
         speed={simSpeed}
         scenarioIssues={scenarioIssueMessages}
+        loadModifiers={loadModifiers}
+        onLoadModifiersChange={setLoadModifiers}
         onRun={handleRun}
         onStop={handleStop}
         onSpeedChange={handleSpeedChange}
@@ -311,6 +324,8 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
           challengeTitle={challenge.title}
           requirements={challenge.requirements}
           score={report.score}
+          architecture={report.attempt.architecture}
+          reference={challenge.referenceSolution ?? referenceArchitectureFor(challenge.id)}
           maxUsersSustained={report.attempt.maxUsersSustained}
           costUsd={report.attempt.costUsd}
           onOpenChange={handleDialogOpenChange}
@@ -334,6 +349,7 @@ function WorkspaceEditor({ challenge }: WorkspaceEditorProps) {
           failedAttempts={failedAttempts}
           canShowSample={failedAttempts >= 3}
           canCompare={previousAttempt !== undefined}
+          replay={<ReplayScrubber architecture={report.attempt.architecture} timeline={timeline} />}
           onOpenChange={handleDialogOpenChange}
           onShowNextHint={handleNextHint}
           onCompare={handleCompare}

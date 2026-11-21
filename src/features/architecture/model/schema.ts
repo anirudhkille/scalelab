@@ -77,6 +77,12 @@ export const componentParamsSchema = z.discriminatedUnion("kind", [
     replication: z.enum(REPLICATION_MODES),
   }),
   z.object({
+    kind: z.literal("searchIndex"),
+    shards: z.number().int().positive().max(64),
+    rpsPerShard: z.number().positive().max(100_000),
+    indexingWriteCostRatio: ratioSchema,
+  }),
+  z.object({
     kind: z.literal("queue"),
     maxDepth: z.number().int().positive().max(10_000_000),
     throughputRps: z.number().positive().max(1_000_000),

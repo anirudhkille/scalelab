@@ -34,6 +34,14 @@ const DevEnginePage = lazy(() =>
   import("@/features/simulation").then((module) => ({ default: module.DevEnginePage })),
 );
 
+const InterviewHubPage = lazy(() =>
+  import("@/features/interview").then((module) => ({ default: module.InterviewHubPage })),
+);
+
+const InterviewPage = lazy(() =>
+  import("@/features/interview").then((module) => ({ default: module.InterviewPage })),
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -44,6 +52,8 @@ const router = createBrowserRouter([
       { path: "custom", element: <CustomChallengePage /> },
       { path: "sandbox", element: <SandboxPage /> },
       { path: "progress", element: <ProgressPage /> },
+      { path: "interview", element: <InterviewHubPage /> },
+      { path: "interview/:id", element: <InterviewPage /> },
       { path: "learn", element: <LearnPage /> },
       { path: "dev/engine", element: <DevEnginePage /> },
       { path: "*", element: <NotFoundPage /> },

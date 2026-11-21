@@ -18,7 +18,8 @@ export {
   type FailureEffect,
   type FailureScenarioIssue,
 } from "./failures";
-export { loadProfileDurationSec, usersAtTime } from "./load-profile";
+export { cacheWarmupTimeSec, hotKeyCapacityFactor } from "./load-modifiers";
+export { loadProfileDurationSec, trafficWaveMultiplier, usersAtTime } from "./load-profile";
 export { computeRunMetrics, type MetricsInput } from "./metrics";
 export { cacheHitRatioAtTime, cacheSteadyHitRatio } from "./nodes/cache";
 export {

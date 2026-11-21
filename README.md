@@ -40,6 +40,11 @@ fetch.
   timeline fan-out, and a rate-limited API; a sandbox with arbitrary load
   sliders; a custom challenge editor with JSON import; shareable designs encoded
   into the URL; and a concept-card library on `/learn`.
+- **Phase 4 — estimation + failure fluency**: an estimator panel in every
+  challenge, a Load Lab with retry storms, daily waves, hot keys and cache
+  flushes, a replay scrubber for failed runs, cost/design comparison after a
+  pass, a timed interview drill, a real rate limiter and search index, three
+  new challenge packs, and offline install support.
 - **SEO + sharing**: canonical URLs, per-route titles and descriptions, Open
   Graph and Twitter cards, a 1200×630 social image, and `robots.txt`/`sitemap.xml`.
 

@@ -1,0 +1,33 @@
+{
+  "name": "ScaleLab — System Design Stress-Testing Playground",
+  "short_name": "ScaleLab",
+  "description": "Build a system architecture, break it with simulated traffic and failures, and learn which component gives out first.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#10141b",
+  "theme_color": "#10141b",
+  "categories": ["education", "developer", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

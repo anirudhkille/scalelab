@@ -28,6 +28,25 @@ function node(
   };
 }
 
+function regionalNode(
+  id: string,
+  kind: NodeKind,
+  label: string,
+  x: number,
+  y: number,
+  region: "us-east" | "eu-west" | "ap-south",
+  params: ComponentParams = defaultComponentParams(kind),
+): ArchNode {
+  return {
+    id: asNodeId(id),
+    label,
+    position: { x, y },
+    region,
+    zone: "a",
+    params,
+  };
+}
+
 function edge(
   id: string,
   source: string,
@@ -56,13 +75,14 @@ function database(
   size: "small" | "medium" | "large" | "xlarge",
   readReplicas = 0,
   shards = 1,
+  replication: "sync" | "async" = "async",
 ): ComponentParams {
   return {
     kind: "database",
     instanceSize: size,
     readReplicas,
     shards,
-    replication: "async",
+    replication,
   };
 }
 
@@ -465,6 +485,180 @@ const RATE_LIMITED_API_REFERENCE: Architecture = {
   ],
 };
 
+// Payments ledger -----------------------------------------------------------
+
+const PAYMENTS: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("pay-clients", "clients", "Merchants", 40),
+    node("pay-dns", "dns", "DNS", 300),
+    node("pay-lb", "loadBalancer", "Load balancer", 560),
+    node("pay-app", "appServer", "Payment service", 820, 160, appServer(1)),
+    node("pay-db", "database", "Ledger", 1_080, 160, database("small")),
+  ],
+  edges: [
+    edge("edge-pay-clients-dns", "pay-clients", "pay-dns"),
+    edge("edge-pay-dns-lb", "pay-dns", "pay-lb"),
+    edge("edge-pay-lb-app", "pay-lb", "pay-app"),
+    edge("edge-pay-app-db", "pay-app", "pay-db"),
+  ],
+};
+
+const PAYMENTS_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("pay-clients", "clients", "Merchants", 40),
+    node("pay-dns", "dns", "DNS", 260),
+    node("pay-gateway", "apiGateway", "API gateway", 480, 160, gateway(5_000)),
+    node("pay-limiter", "rateLimiter", "Abuse limiter", 700, 160, rateLimiter(4_000)),
+    node("pay-lb", "loadBalancer", "Load balancer", 920, 160),
+    node("pay-app", "appServer", "Payment service", 1_160, 160, appServer(6)),
+    node("pay-db", "database", "Ledger", 1_420, 60, database("medium", 1, 1, "sync")),
+    node("pay-assets", "objectStorage", "Static assets", 1_420, 360),
+    node("pay-queue", "queue", "Receipt queue", 1_420, 260, queue(10_000, 2_000)),
+    node("pay-worker", "worker", "Receipt workers", 1_680, 260, workers(4)),
+  ],
+  edges: [
+    edge("edge-pay-clients-dns", "pay-clients", "pay-dns"),
+    edge("edge-pay-dns-gateway", "pay-dns", "pay-gateway"),
+    edge("edge-pay-gateway-limiter", "pay-gateway", "pay-limiter"),
+    edge("edge-pay-limiter-lb", "pay-limiter", "pay-lb"),
+    edge("edge-pay-lb-app", "pay-lb", "pay-app"),
+    edge("edge-pay-app-db", "pay-app", "pay-db", ["read", "write"]),
+    edge("edge-pay-app-assets", "pay-app", "pay-assets", ["static"]),
+    edge("edge-pay-app-queue", "pay-app", "pay-queue", ["write"]),
+    edge("edge-pay-queue-worker", "pay-queue", "pay-worker"),
+    edge("edge-pay-worker-db", "pay-worker", "pay-db", ["write"]),
+  ],
+};
+
+// Notifications fan-out -----------------------------------------------------
+
+const NOTIFICATIONS: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("notif-clients", "clients", "Product services", 40),
+    node("notif-dns", "dns", "DNS", 300),
+    node("notif-lb", "loadBalancer", "Load balancer", 560),
+    node("notif-app", "appServer", "Notification API", 820, 160, appServer(1)),
+    node("notif-db", "database", "Subscriptions", 1_080, 160, database("small")),
+  ],
+  edges: [
+    edge("edge-notif-clients-dns", "notif-clients", "notif-dns"),
+    edge("edge-notif-dns-lb", "notif-dns", "notif-lb"),
+    edge("edge-notif-lb-app", "notif-lb", "notif-app"),
+    edge("edge-notif-app-db", "notif-app", "notif-db"),
+  ],
+};
+
+const NOTIFICATIONS_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("notif-clients", "clients", "Product services", 40),
+    node("notif-dns", "dns", "DNS", 300),
+    node("notif-lb", "loadBalancer", "Load balancer", 560),
+    node("notif-app", "appServer", "Notification API", 820, 160, appServer(8)),
+    node("notif-queue", "queue", "Delivery queue", 1_080, 260, queue(30_000, 6_000)),
+    node("notif-worker", "worker", "Channel workers", 1_340, 260, workers(12)),
+    node("notif-db", "database", "Subscriptions", 1_080, 60, database("medium", 1)),
+    node("notif-assets", "objectStorage", "Email templates", 1_340, 60),
+  ],
+  edges: [
+    edge("edge-notif-clients-dns", "notif-clients", "notif-dns"),
+    edge("edge-notif-dns-lb", "notif-dns", "notif-lb"),
+    edge("edge-notif-lb-app", "notif-lb", "notif-app"),
+    edge("edge-notif-app-db", "notif-app", "notif-db", ["read"]),
+    edge("edge-notif-app-assets", "notif-app", "notif-assets", ["static"]),
+    edge("edge-notif-app-queue", "notif-app", "notif-queue", ["write"]),
+    edge("edge-notif-queue-worker", "notif-queue", "notif-worker"),
+    edge("edge-notif-worker-db", "notif-worker", "notif-db", ["write"]),
+  ],
+};
+
+// Global multi-region service -----------------------------------------------
+
+const GLOBAL_SERVICE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("global-clients", "clients", "Worldwide users", 40),
+    node("global-dns", "dns", "Geo DNS", 300),
+    node("global-lb", "loadBalancer", "Load balancer", 560),
+    node("global-app", "appServer", "API service", 820, 160, appServer(1)),
+    node("global-db", "database", "Primary store", 1_080, 160, database("small")),
+  ],
+  edges: [
+    edge("edge-global-clients-dns", "global-clients", "global-dns"),
+    edge("edge-global-dns-lb", "global-dns", "global-lb"),
+    edge("edge-global-lb-app", "global-lb", "global-app"),
+    edge("edge-global-app-db", "global-app", "global-db"),
+  ],
+};
+
+const GLOBAL_SERVICE_REFERENCE: Architecture = {
+  schemaVersion: 1,
+  nodes: [
+    node("global-clients", "clients", "Worldwide users", 40, 220),
+    node("global-dns", "dns", "Geo DNS", 280, 220),
+    regionalNode(
+      "global-lb-us",
+      "loadBalancer",
+      "US load balancer",
+      540,
+      80,
+      "us-east",
+      defaultComponentParams("loadBalancer"),
+    ),
+    regionalNode("global-app-us", "appServer", "US API", 800, 80, "us-east", appServer(4)),
+    regionalNode("global-cache-us", "cache", "US cache", 1_060, 80, "us-east", cache(8)),
+    regionalNode(
+      "global-lb-eu",
+      "loadBalancer",
+      "EU load balancer",
+      540,
+      220,
+      "eu-west",
+      defaultComponentParams("loadBalancer"),
+    ),
+    regionalNode("global-app-eu", "appServer", "EU API", 800, 220, "eu-west", appServer(4)),
+    regionalNode("global-cache-eu", "cache", "EU cache", 1_060, 220, "eu-west", cache(8)),
+    regionalNode(
+      "global-lb-ap",
+      "loadBalancer",
+      "APAC load balancer",
+      540,
+      360,
+      "ap-south",
+      defaultComponentParams("loadBalancer"),
+    ),
+    regionalNode("global-app-ap", "appServer", "APAC API", 800, 360, "ap-south", appServer(4)),
+    regionalNode("global-cache-ap", "cache", "APAC cache", 1_060, 360, "ap-south", cache(8)),
+    regionalNode(
+      "global-db",
+      "database",
+      "Primary store",
+      1_320,
+      220,
+      "us-east",
+      database("medium", 1),
+    ),
+  ],
+  edges: [
+    edge("edge-global-clients-dns", "global-clients", "global-dns"),
+    edge("edge-global-dns-lb-us", "global-dns", "global-lb-us"),
+    edge("edge-global-dns-lb-eu", "global-dns", "global-lb-eu"),
+    edge("edge-global-dns-lb-ap", "global-dns", "global-lb-ap"),
+    edge("edge-global-lb-us-app", "global-lb-us", "global-app-us"),
+    edge("edge-global-lb-eu-app", "global-lb-eu", "global-app-eu"),
+    edge("edge-global-lb-ap-app", "global-lb-ap", "global-app-ap"),
+    edge("edge-global-app-us-cache", "global-app-us", "global-cache-us"),
+    edge("edge-global-app-eu-cache", "global-app-eu", "global-cache-eu"),
+    edge("edge-global-app-ap-cache", "global-app-ap", "global-cache-ap"),
+    edge("edge-global-cache-us-db", "global-cache-us", "global-db"),
+    edge("edge-global-cache-eu-db", "global-cache-eu", "global-db"),
+    edge("edge-global-cache-ap-db", "global-cache-ap", "global-db"),
+  ],
+};
+
 const STARTERS: Readonly<Record<string, Architecture>> = {
   "personal-blog": PERSONAL_BLOG,
   "url-shortener": URL_SHORTENER,
@@ -475,6 +669,9 @@ const STARTERS: Readonly<Record<string, Architecture>> = {
   "video-streaming": VIDEO_STREAMING,
   "timeline-fanout": TIMELINE,
   "rate-limited-api": RATE_LIMITED_API,
+  payments: PAYMENTS,
+  notifications: NOTIFICATIONS,
+  "global-service": GLOBAL_SERVICE,
 };
 
 const REFERENCES: Readonly<Record<string, Architecture>> = {
@@ -487,6 +684,9 @@ const REFERENCES: Readonly<Record<string, Architecture>> = {
   "video-streaming": VIDEO_STREAMING_REFERENCE,
   "timeline-fanout": TIMELINE_REFERENCE,
   "rate-limited-api": RATE_LIMITED_API_REFERENCE,
+  payments: PAYMENTS_REFERENCE,
+  notifications: NOTIFICATIONS_REFERENCE,
+  "global-service": GLOBAL_SERVICE_REFERENCE,
 };
 
 export function starterArchitectureFor(challengeId: string): Architecture {

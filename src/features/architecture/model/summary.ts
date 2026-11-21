@@ -29,6 +29,8 @@ export function componentSummary(params: ComponentParams): string {
       return `${formatNumber(params.memoryGb)} GB · ${formatNumber(params.ttlSec)}s TTL`;
     case "database":
       return `${titleCase(params.instanceSize)} · ${params.readReplicas} replica${params.readReplicas === 1 ? "" : "s"} · ${params.shards} shard${params.shards === 1 ? "" : "s"}`;
+    case "searchIndex":
+      return `${params.shards} shard${params.shards === 1 ? "" : "s"} · ${formatNumber(params.rpsPerShard)} rps`;
     case "queue":
       return `${formatNumber(params.maxDepth)} depth · ${formatNumber(params.throughputRps)} rps`;
     case "worker":

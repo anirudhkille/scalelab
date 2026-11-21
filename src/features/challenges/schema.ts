@@ -8,6 +8,7 @@ import {
   nodeIdSchema,
   ratioSchema,
 } from "@/features/architecture";
+import { challengePackSchema } from "./packs";
 
 export type ChallengeId = string & { readonly __brand: "ChallengeId" };
 
@@ -74,6 +75,33 @@ export const failureEventSchema = z
 
 export type FailureEvent = z.infer<typeof failureEventSchema>;
 
+export const loadModifiersSchema = z.object({
+  retryStorm: z.object({
+    enabled: z.boolean(),
+    maxAttempts: z.number().int().min(1).max(10),
+  }),
+  trafficWave: z.object({
+    enabled: z.boolean(),
+    amplitudeRatio: ratioSchema,
+    periodSec: z.number().positive(),
+  }),
+  hotKey: z.object({
+    enabled: z.boolean(),
+    target: z.enum(["cache", "database", "searchIndex"]),
+    skewRatio: ratioSchema,
+  }),
+  /** Simulated second at which the cache is flushed, if any. */
+  cacheFlushAtSec: z.number().nonnegative().optional(),
+});
+
+export type LoadModifiers = z.infer<typeof loadModifiersSchema>;
+
+export const DEFAULT_LOAD_MODIFIERS: LoadModifiers = {
+  retryStorm: { enabled: false, maxAttempts: 3 },
+  trafficWave: { enabled: false, amplitudeRatio: 0.35, periodSec: 40 },
+  hotKey: { enabled: false, target: "cache", skewRatio: 0.6 },
+};
+
 export const challengeRequirementsSchema = z.object({
   targetUsers: z.number().int().positive(),
   requestsPerUserPerSec: z.number().positive(),
@@ -94,6 +122,7 @@ export type ChallengeRunConfig = {
   readonly requirements: ChallengeRequirements;
   readonly loadProfile: readonly LoadStage[];
   readonly failureScenarios?: readonly FailureEvent[];
+  readonly loadModifiers?: LoadModifiers;
 };
 
 export const challengeDifficultySchema = z.union([
@@ -108,11 +137,13 @@ export const challengeSchema = z.object({
   id: challengeIdSchema,
   title: z.string().min(1),
   difficulty: challengeDifficultySchema,
+  pack: challengePackSchema.default("fundamentals"),
   concepts: z.array(z.string()),
   briefMd: z.string(),
   requirements: challengeRequirementsSchema,
   loadProfile: z.array(loadStageSchema),
   failureScenarios: z.array(failureEventSchema).optional(),
+  loadModifiers: loadModifiersSchema.optional(),
   allowedComponents: z.array(z.enum(NODE_KINDS)),
   starterArchitecture: architectureSchema.optional(),
   referenceSolution: architectureSchema.optional(),

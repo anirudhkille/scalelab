@@ -43,6 +43,10 @@ export const COMPONENT_CATALOG = {
     label: "Database",
     description: "Durable read/write storage. Replicas and shards raise capacity.",
   },
+  searchIndex: {
+    label: "Search index",
+    description: "Serves search reads from shards. Writes pay indexing amplification.",
+  },
   queue: {
     label: "Queue",
     description: "Buffers writes so a burst does not hit the database all at once.",
@@ -85,6 +89,12 @@ export const COMPONENT_DEFAULTS = {
     shards: 1,
     replication: "async",
   },
+  searchIndex: {
+    kind: "searchIndex",
+    shards: 2,
+    rpsPerShard: 1_500,
+    indexingWriteCostRatio: 0.25,
+  },
   queue: { kind: "queue", maxDepth: 10_000, throughputRps: 500 },
   worker: { kind: "worker", instances: 2, rpsPerInstance: 200 },
   objectStorage: { kind: "objectStorage" },
@@ -109,6 +119,7 @@ const COST_PER_LOAD_BALANCER_USD = 25;
 const COST_PER_CDN_USD = 50;
 const COST_PER_GATEWAY_USD = 20;
 const COST_PER_OBJECT_STORAGE_USD = 10;
+const COST_PER_SEARCH_SHARD_USD = 45;
 
 function queueMonthlyCostUsd(throughputRps: number): number {
   if (throughputRps <= 1_000) {
@@ -155,6 +166,8 @@ export function monthlyCostUsd(params: ComponentParams): number {
       const replicationFactor = REPLICATION_COST_FACTOR[params.replication];
       return tierCost * replicaFactor * params.shards * replicationFactor;
     }
+    case "searchIndex":
+      return params.shards * COST_PER_SEARCH_SHARD_USD;
     case "queue":
       return queueMonthlyCostUsd(params.throughputRps);
     case "worker":

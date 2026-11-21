@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -40,6 +40,7 @@ type FailureReportDialogProps = {
   readonly failedAttempts: number;
   readonly canShowSample: boolean;
   readonly canCompare: boolean;
+  readonly replay?: ReactNode;
   readonly onOpenChange: (open: boolean) => void;
   readonly onShowNextHint: () => void;
   readonly onCompare: () => void;
@@ -85,6 +86,7 @@ export function FailureReportDialog({
   failedAttempts,
   canShowSample,
   canCompare,
+  replay,
   onOpenChange,
   onShowNextHint,
   onCompare,
@@ -177,6 +179,8 @@ export function FailureReportDialog({
             />
           </div>
         </section>
+
+        {replay}
 
         <section className="rounded-xl border bg-muted/25 p-4">
           <div className="flex items-center gap-2">

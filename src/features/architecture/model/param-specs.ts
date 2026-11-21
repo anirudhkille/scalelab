@@ -200,6 +200,36 @@ export const COMPONENT_PARAM_SPECS = {
       hint: "Synchronous replication is safer but reduces write capacity.",
     },
   ],
+  searchIndex: [
+    {
+      type: "number",
+      key: "shards",
+      label: "Shards",
+      min: 1,
+      max: 32,
+      step: 1,
+    },
+    {
+      type: "number",
+      key: "rpsPerShard",
+      label: "Reads per shard",
+      min: 100,
+      max: 20_000,
+      step: 100,
+      unit: "rps",
+    },
+    {
+      type: "number",
+      key: "indexingWriteCostRatio",
+      label: "Write indexing cost",
+      min: 5,
+      max: 200,
+      step: 5,
+      unit: "% of a read",
+      scale: 100,
+      hint: "Writes are expensive: indexing consumes read capacity in the model.",
+    },
+  ],
   queue: [
     {
       type: "number",

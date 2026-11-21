@@ -1,5 +1,14 @@
 export { AttemptCompareDialog } from "./components/attempt-compare-dialog";
+export { DesignComparison } from "./components/design-comparison";
 export { ResultDialog } from "./components/result-dialog";
+export {
+  costBreakdownByComponent,
+  designDiff,
+  type CostBreakdown,
+  type CostBreakdownLine,
+  type DesignDiff,
+  type KindDelta,
+} from "./design-comparison";
 export { StarRating } from "./components/star-rating";
 export {
   EXPORT_FORMAT,

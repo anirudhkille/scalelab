@@ -15,6 +15,9 @@ import {
   DATABASE_REPLICATION_WRITE_FACTOR,
   DATABASE_STORAGE_GB,
 } from "../constants";
+import type { LoadModifiers } from "@/features/challenges";
+
+import { hotKeyCapacityFactor } from "../load-modifiers";
 import { processQueue, queueDepthForSeconds } from "../queue";
 import type { NodeBehavior } from "../types";
 import { distributeForwarded } from "./shared";
@@ -32,6 +35,7 @@ export type DatabaseTickInput = {
   readonly incoming: TrafficRate;
   readonly queueDepth: number;
   readonly dtSec: number;
+  readonly loadModifiers?: LoadModifiers;
 };
 
 /**
@@ -112,6 +116,7 @@ export const databaseBehavior: NodeBehavior = (context) => {
     incoming: context.incoming,
     queueDepth: context.queueDepth,
     dtSec: context.dtSec,
+    ...(context.loadModifiers === undefined ? {} : { loadModifiers: context.loadModifiers }),
   });
 
   const acceptedRatio = incomingRps > 0 ? queue.servedRps / incomingRps : 0;
@@ -147,7 +152,9 @@ export function processDatabaseTick(input: DatabaseTickInput) {
   const capacities = databaseCapacities(input.params);
   const readLoad = input.incoming.read + input.incoming.static;
   const writeLoad = input.incoming.write;
-  const capacityRps = equivalentCapacityRps(readLoad, writeLoad, capacities);
+  const capacityRps =
+    equivalentCapacityRps(readLoad, writeLoad, capacities) *
+    hotKeyCapacityFactor(input.loadModifiers, "database");
   const incomingRps = trafficTotal(input.incoming);
 
   return processQueue({

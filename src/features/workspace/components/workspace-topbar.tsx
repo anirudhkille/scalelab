@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   CircleDollarSign,
+  MessagesSquare,
   Play,
   Redo2,
   RotateCcw,
@@ -24,7 +25,13 @@ import {
   useDesignStore,
   validateArchitecture,
 } from "@/features/architecture";
-import { RequirementsSheet, type Challenge } from "@/features/challenges";
+import {
+  EstimatorDialog,
+  LoadLabDialog,
+  RequirementsSheet,
+  type Challenge,
+  type LoadModifiers,
+} from "@/features/challenges";
 import { SIM_SPEEDS, isSimSpeed, type SimSpeed } from "@/features/settings";
 import type { RunStatus } from "@/features/simulation";
 import { Badge } from "@/shared/ui/badge";
@@ -57,6 +64,8 @@ type WorkspaceTopbarProps = {
   readonly status: RunStatus;
   readonly speed: SimSpeed;
   readonly scenarioIssues: readonly string[];
+  readonly loadModifiers: LoadModifiers;
+  readonly onLoadModifiersChange: (next: LoadModifiers) => void;
   readonly onRun: () => void;
   readonly onStop: () => void;
   readonly onSpeedChange: (speed: SimSpeed) => void;
@@ -67,6 +76,8 @@ export function WorkspaceTopbar({
   status,
   speed,
   scenarioIssues,
+  loadModifiers,
+  onLoadModifiersChange,
   onRun,
   onStop,
   onSpeedChange,
@@ -208,7 +219,19 @@ export function WorkspaceTopbar({
           </Select>
         </div>
 
+        <LoadLabDialog value={loadModifiers} onChange={onLoadModifiersChange} disabled={running} />
+        <EstimatorDialog challenge={challenge} />
         <RequirementsSheet challenge={challenge} />
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link to={`/interview/${challenge.id}`} />}
+          title="Practice this design in interview mode"
+        >
+          <MessagesSquare />
+          Interview
+        </Button>
 
         {running ? (
           <Button type="button" variant="destructive" size="sm" onClick={onStop}>

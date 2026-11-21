@@ -5,14 +5,9 @@ import { processQueue, queueDepthForSeconds } from "../queue";
 import type { NodeBehavior } from "../types";
 import { distributeForwarded } from "./shared";
 
-type PassThroughKind = "dns" | "apiGateway" | "rateLimiter" | "objectStorage";
+type PassThroughKind = "dns" | "apiGateway" | "objectStorage";
 
-const PASS_THROUGH_KINDS: ReadonlySet<NodeKind> = new Set([
-  "dns",
-  "apiGateway",
-  "rateLimiter",
-  "objectStorage",
-]);
+const PASS_THROUGH_KINDS: ReadonlySet<NodeKind> = new Set(["dns", "apiGateway", "objectStorage"]);
 
 function isPassThroughKind(kind: NodeKind): kind is PassThroughKind {
   return PASS_THROUGH_KINDS.has(kind);
@@ -24,8 +19,6 @@ function baseLatencyMs(kind: PassThroughKind): number {
       return PLACEHOLDER_LATENCY_MS.dns;
     case "apiGateway":
       return PLACEHOLDER_LATENCY_MS.apiGateway;
-    case "rateLimiter":
-      return PLACEHOLDER_LATENCY_MS.rateLimiter;
     case "objectStorage":
       return PLACEHOLDER_LATENCY_MS.objectStorage;
   }
@@ -34,7 +27,6 @@ function baseLatencyMs(kind: PassThroughKind): number {
 function finiteCapacityRps(kind: PassThroughKind, nodeCapacity: number | null): number | null {
   switch (kind) {
     case "apiGateway":
-    case "rateLimiter":
       return nodeCapacity;
     case "dns":
     case "objectStorage":
@@ -45,8 +37,8 @@ function finiteCapacityRps(kind: PassThroughKind, nodeCapacity: number | null): 
 /**
  * Remaining low-detail nodes.
  *
- * DNS and object storage are effectively unlimited. Gateway and rate limiter
- * enforce `limitRps` and drop excess traffic.
+ * DNS and object storage are effectively unlimited. Gateway enforces
+ * `limitRps` with a short queue.
  */
 export const passThroughBehavior: NodeBehavior = (context) => {
   const kind = context.node.params.kind;
@@ -55,10 +47,7 @@ export const passThroughBehavior: NodeBehavior = (context) => {
   }
 
   const incomingRps = trafficTotal(context.incoming);
-  const limitRps =
-    context.node.params.kind === "apiGateway" || context.node.params.kind === "rateLimiter"
-      ? context.node.params.limitRps
-      : null;
+  const limitRps = context.node.params.kind === "apiGateway" ? context.node.params.limitRps : null;
   const capacity = finiteCapacityRps(kind, limitRps);
   const latencyMs = baseLatencyMs(kind);
 

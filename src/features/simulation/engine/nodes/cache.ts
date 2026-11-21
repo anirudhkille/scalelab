@@ -11,6 +11,7 @@ import {
   CACHE_WRITE_BACK_LATENCY_MS,
   CACHE_WRITE_THROUGH_LATENCY_MS,
 } from "../constants";
+import { cacheWarmupTimeSec, hotKeyCapacityFactor } from "../load-modifiers";
 import { processQueue, queueDepthForSeconds } from "../queue";
 import type { NodeBehavior } from "../types";
 import { distributeForwarded } from "./shared";
@@ -50,11 +51,12 @@ export const cacheBehavior: NodeBehavior = (context) => {
 
   const params = context.node.params;
   const incomingRps = trafficTotal(context.incoming);
+  const capacityRps = CACHE_CAPACITY_RPS * hotKeyCapacityFactor(context.loadModifiers, "cache");
   const queue = processQueue({
     incomingRps,
-    capacityRps: CACHE_CAPACITY_RPS,
+    capacityRps,
     queueDepth: context.queueDepth,
-    maxQueueDepth: queueDepthForSeconds(CACHE_CAPACITY_RPS, CACHE_QUEUE_LIMIT_SEC),
+    maxQueueDepth: queueDepthForSeconds(capacityRps, CACHE_QUEUE_LIMIT_SEC),
     baseLatencyMs: CACHE_BASE_LATENCY_MS,
     dtSec: context.dtSec,
   });
@@ -62,7 +64,7 @@ export const cacheBehavior: NodeBehavior = (context) => {
   const hitRatio = cacheHitRatioAtTime(
     params.memoryGb,
     context.requirements.workingSetGb,
-    context.timeSec,
+    cacheWarmupTimeSec(context.loadModifiers, context.timeSec),
   );
   const acceptedRatio = incomingRps > 0 ? queue.servedRps / incomingRps : 0;
   const accepted: TrafficRate = {

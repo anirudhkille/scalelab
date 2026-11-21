@@ -14,6 +14,7 @@ const FEATURES = new Set([
   "playback",
   "diagnosis",
   "progress",
+  "interview",
   "workspace",
   "learn",
   "settings",
@@ -24,6 +25,7 @@ const RANK = {
   simulation: 2,
   diagnosis: 3,
   progress: 4,
+  interview: 4.5,
   workspace: 5,
   learn: 6,
 };
