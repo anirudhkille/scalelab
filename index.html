@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10141b" />
+    <meta
+      name="description"
+      content="Design a system architecture, hit it with simulated load, and learn why it breaks."
+    />
+    <title>ScaleLab — System Design Stress-Testing Playground</title>
+    <script>
+      // Apply the persisted theme before first paint to avoid a flash.
+      (function () {
+        var theme = null;
+        try {
+          var stored = JSON.parse(localStorage.getItem("scalelab:v1") || "null");
+          if (stored && stored.state && stored.state.settings) {
+            theme = stored.state.settings.theme;
+          }
+        } catch {
+          /* start fresh */
+        }
+        if (
+          theme !== "midnight" &&
+          theme !== "violet" &&
+          theme !== "terminal" &&
+          theme !== "paper"
+        ) {
+          theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "paper" : "midnight";
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.toggle("dark", theme !== "paper");
+        document.documentElement.style.colorScheme = theme === "paper" ? "light" : "dark";
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
