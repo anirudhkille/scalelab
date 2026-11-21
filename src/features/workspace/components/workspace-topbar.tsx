@@ -20,6 +20,7 @@ import {
   useDesignStore,
   validateArchitecture,
 } from "@/features/architecture";
+import { RequirementsSheet, type Challenge } from "@/features/challenges";
 import { SIM_SPEEDS, isSimSpeed, type SimSpeed } from "@/features/settings";
 import type { RunStatus } from "@/features/simulation";
 import { Badge } from "@/shared/ui/badge";
@@ -48,7 +49,7 @@ const STATUS_CLASS: Record<RunStatus, string> = {
 };
 
 type WorkspaceTopbarProps = {
-  readonly title: string;
+  readonly challenge: Challenge;
   readonly status: RunStatus;
   readonly speed: SimSpeed;
   readonly onRun: () => void;
@@ -57,7 +58,7 @@ type WorkspaceTopbarProps = {
 };
 
 export function WorkspaceTopbar({
-  title,
+  challenge,
   status,
   speed,
   onRun,
@@ -95,9 +96,9 @@ export function WorkspaceTopbar({
         Challenges
       </Button>
       <span className="text-muted-foreground">/</span>
-      <h1 className="text-sm font-medium">{title}</h1>
+      <h1 className="text-sm font-medium">{challenge.title}</h1>
       <Badge variant="outline" className="font-mono text-[10px] tracking-wider uppercase">
-        Editor · M4
+        Editor · M5
       </Badge>
       <Badge variant="outline" className={STATUS_CLASS[status]} aria-live="polite">
         {STATUS_LABEL[status]}
@@ -162,9 +163,7 @@ export function WorkspaceTopbar({
           </Select>
         </div>
 
-        <Button variant="outline" size="sm" disabled title="Challenge requirements arrive with M5">
-          Requirements
-        </Button>
+        <RequirementsSheet challenge={challenge} />
 
         {running ? (
           <Button type="button" variant="destructive" size="sm" onClick={onStop}>

@@ -1,5 +1,13 @@
+export { ChallengeCard } from "./components/challenge-card";
+export { RequirementsSheet } from "./components/requirements-sheet";
+export {
+  CHALLENGE_DIFFICULTY_LABELS,
+  difficultyLabel,
+  type ChallengeDifficulty,
+} from "./difficulty";
+export { CHALLENGES, challengeFor, challengeOrFallback } from "./data/catalog";
 export { runConfigFor } from "./data/run-configs";
-export { starterArchitectureFor } from "./data/starter-designs";
+export { referenceArchitectureFor, starterArchitectureFor } from "./data/starter-designs";
 export { HubPage } from "./pages/hub-page";
 export {
   asChallengeId,

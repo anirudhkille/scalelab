@@ -18,6 +18,10 @@ export function asAttemptId(value: string): AttemptId {
   return value as AttemptId;
 }
 
+export function newAttemptId(): AttemptId {
+  return asAttemptId(`attempt_${globalThis.crypto.randomUUID()}`);
+}
+
 export const attemptRecordSchema = z.object({
   id: attemptIdSchema,
   challengeId: challengeIdSchema,

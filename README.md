@@ -24,11 +24,14 @@ fetch.
 - **M4 — live load tests**: worker-backed playback, run/stop and 1x–10x speed,
   per-node health bars, edge flow weighting, particle traffic, four live
   metrics charts, and a failure overlay.
-- **Next**: M5 failure reports and the challenge catalogue.
+- **M5 — challenges + reports**: five tuned challenges, requirements drawers,
+  starter and reference designs, progressive hints, failure reports with
+  evidence and a p95 sparkline, three-star scoring, and session attempt history.
+- **Next**: M6 persistence and saved progress.
 
-The workspace at `/challenge/:id` can now build and run a design. The engine is
-also usable headlessly from `@/features/simulation` and has a developer page at
-`/dev/engine`.
+The workspace at `/challenge/:id` now runs a complete challenge loop: design,
+run, diagnose, and retry. The engine is also usable headlessly from
+`@/features/simulation` and has a developer page at `/dev/engine`.
 
 ## Stack
 
@@ -116,6 +119,19 @@ Keyboard: `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` redo,
   component to give out.
 - `1x`, `2x`, `5x`, and `10x` speeds are simulated-time multipliers, not animation
   speeds. Particle density is sampled from the current edge rates.
+
+## Challenges and reports at a glance
+
+- Five challenges cover static-heavy, read-heavy, media, bursty-write, and
+  flash-sale traffic. Each ships a starter design, a reference solution, and
+  numbers tuned against the engine.
+- The requirements drawer shows traffic shape, load stages, budget, SLOs, hints,
+  and allowed components.
+- A failed run opens a report with the bottleneck, evidence, a 10-second p95
+  sparkline, plain-English context, and progressive hints.
+- Stars reward surviving the target, staying within budget, and holding 2× the
+  target. Attempts are grouped by challenge on the Progress page.
+- Attempt history is session-only until M6 adds local persistence.
 
 ## Engine at a glance
 

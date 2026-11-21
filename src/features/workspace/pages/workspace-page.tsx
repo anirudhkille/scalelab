@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useParams } from "react-router";
 
@@ -9,52 +9,79 @@ import {
   selectArchitecture,
   useDesignShortcuts,
   useDesignStore,
+  type Architecture,
   type EdgeId,
   type NodeHealth,
   type NodeId,
 } from "@/features/architecture";
-import { runConfigFor, starterArchitectureFor } from "@/features/challenges";
-import { LiveMetricsPanel, ParticleLayer, RunOverlay } from "@/features/playback";
+import {
+  challengeOrFallback,
+  referenceArchitectureFor,
+  runConfigFor,
+  starterArchitectureFor,
+} from "@/features/challenges";
+import { FailureReportDialog, diagnoseFailure, type FailureDiagnosis } from "@/features/diagnosis";
+import { LiveMetricsPanel, ParticleLayer } from "@/features/playback";
+import {
+  ResultDialog,
+  attemptFromResult,
+  selectAttempts,
+  useAttemptStore,
+  type AttemptRecord,
+  type AttemptScore,
+} from "@/features/progress";
 import { isSimSpeed, useSettingsStore, type SimSpeed } from "@/features/settings";
 import {
-  selectRunOutcome,
+  selectRunHistory,
+  selectRunResult,
   selectRunStatus,
   selectRunStep,
   useRunSimulation,
   useRunStore,
+  type RunResult,
 } from "@/features/simulation";
 
 import { WorkspaceTopbar } from "../components/workspace-topbar";
 
-const CHALLENGE_TITLES: Record<string, string> = {
-  "personal-blog": "Personal Blog / Portfolio",
-  "url-shortener": "URL Shortener",
+type DialogKind = "result" | "failure" | null;
+
+type RunReport = {
+  readonly result: RunResult;
+  readonly score: AttemptScore;
+  readonly attempt: AttemptRecord;
+  readonly diagnosis: FailureDiagnosis | null;
 };
 
 type WorkspaceEditorProps = {
   readonly challengeId: string;
-  readonly title: string;
 };
 
-function WorkspaceEditor({ challengeId, title }: WorkspaceEditorProps) {
+function WorkspaceEditor({ challengeId }: WorkspaceEditorProps) {
+  const challenge = useMemo(() => challengeOrFallback(challengeId), [challengeId]);
   const architecture = useDesignStore(selectArchitecture);
   const loadArchitecture = useDesignStore((state) => state.loadArchitecture);
   const resetRun = useRunStore((state) => state.resetRun);
   const status = useRunStore(selectRunStatus);
   const step = useRunStore(selectRunStep);
-  const outcome = useRunStore(selectRunOutcome);
+  const result = useRunStore(selectRunResult);
+  const history = useRunStore(selectRunHistory);
+  const attempts = useAttemptStore(selectAttempts);
+  const addAttempt = useAttemptStore((state) => state.addAttempt);
   const { startRun, stopRun, setRunSpeed } = useRunSimulation();
   const simSpeed = useSettingsStore((state) => state.settings.simSpeed);
   const setSimSpeed = useSettingsStore((state) => state.setSimSpeed);
-  const [overlayHidden, setOverlayHidden] = useState(false);
+  const [report, setReport] = useState<RunReport | null>(null);
+  const [dialog, setDialog] = useState<DialogKind>(null);
+  const runArchitectureRef = useRef<Architecture>(architecture);
+  const recordedResultRef = useRef<RunResult | null>(null);
 
   useState(() => {
-    loadArchitecture(starterArchitectureFor(challengeId));
+    loadArchitecture(starterArchitectureFor(challenge.id));
     resetRun();
     return true;
   });
 
-  const runConfig = useMemo(() => runConfigFor(challengeId), [challengeId]);
+  const runConfig = useMemo(() => runConfigFor(challenge.id), [challenge.id]);
   const running = status === "running";
 
   const nodeHealthById = useMemo<ReadonlyMap<NodeId, NodeHealth> | undefined>(() => {
@@ -73,20 +100,47 @@ function WorkspaceEditor({ challengeId, title }: WorkspaceEditorProps) {
     return new Map(step.edges.map((edge) => [edge.edgeId, edge.rps]));
   }, [step]);
 
-  const failedOutcome = outcome?.status === "failed" ? outcome : null;
-  const rootCauseLabel = useMemo(() => {
-    if (!failedOutcome) {
-      return "Unknown component";
+  const failedAttempts = useMemo(
+    () =>
+      attempts.filter((attempt) => attempt.challengeId === challenge.id && attempt.stars === 0)
+        .length,
+    [attempts, challenge.id],
+  );
+
+  useEffect(() => {
+    if (!result || recordedResultRef.current === result) {
+      return;
     }
 
-    return (
-      architecture.nodes.find((node) => node.id === failedOutcome.rootCauseNodeId)?.label ??
-      "Unknown component"
-    );
-  }, [architecture.nodes, failedOutcome]);
+    recordedResultRef.current = result;
+    const architectureAtRun = runArchitectureRef.current;
+    const diagnosis =
+      result.outcome.status === "failed"
+        ? diagnoseFailure(architectureAtRun, challenge.requirements, result)
+        : null;
+    const scored = attemptFromResult({
+      challengeId: challenge.id,
+      architecture: architectureAtRun,
+      requirements: challenge.requirements,
+      maxUsersSustained: result.maxUsersSustained,
+      costUsd: result.monthlyCostUsd,
+      ...(diagnosis === null ? {} : { failureSummary: diagnosis.headline }),
+    });
+
+    addAttempt(scored.attempt);
+    setReport({
+      result,
+      score: scored.score,
+      attempt: scored.attempt,
+      diagnosis,
+    });
+    setDialog(result.outcome.status === "passed" ? "result" : "failure");
+  }, [addAttempt, challenge.id, challenge.requirements, result]);
 
   const handleRun = useCallback(() => {
-    setOverlayHidden(false);
+    setDialog(null);
+    setReport(null);
+    runArchitectureRef.current = architecture;
     startRun(architecture, runConfig, simSpeed);
   }, [architecture, runConfig, simSpeed, startRun]);
 
@@ -106,14 +160,31 @@ function WorkspaceEditor({ challengeId, title }: WorkspaceEditorProps) {
     [setRunSpeed, setSimSpeed],
   );
 
-  const handleDismissOverlay = useCallback(() => setOverlayHidden(true), []);
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setDialog(null);
+    }
+  }, []);
+
+  const handleEditDesign = useCallback(() => {
+    setDialog(null);
+  }, []);
+
+  const handleShowSampleSolution = useCallback(() => {
+    loadArchitecture(referenceArchitectureFor(challenge.id));
+    resetRun();
+    setReport(null);
+    setDialog(null);
+  }, [challenge.id, loadArchitecture, resetRun]);
 
   useDesignShortcuts(!running);
+
+  const failedOutcome = report?.result.outcome.status === "failed" ? report.result.outcome : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <WorkspaceTopbar
-        title={title}
+        challenge={challenge}
         status={status}
         speed={simSpeed}
         onRun={handleRun}
@@ -130,19 +201,7 @@ function WorkspaceEditor({ challengeId, title }: WorkspaceEditorProps) {
             crowdUsers={step?.metrics.users}
             locked={running}
             flowing={running}
-            overlay={
-              <>
-                <ParticleLayer />
-                {failedOutcome && !overlayHidden ? (
-                  <RunOverlay
-                    outcome={failedOutcome}
-                    rootCauseLabel={rootCauseLabel}
-                    onRunAgain={handleRun}
-                    onDismiss={handleDismissOverlay}
-                  />
-                ) : null}
-              </>
-            }
+            overlay={<ParticleLayer />}
           />
           <InspectorPanel locked={running} />
         </div>
@@ -152,13 +211,45 @@ function WorkspaceEditor({ challengeId, title }: WorkspaceEditorProps) {
         p95SloMs={runConfig.requirements.latencyP95Ms}
         maxErrorRatio={runConfig.requirements.maxErrorRatio}
       />
+
+      {report?.result.outcome.status === "passed" ? (
+        <ResultDialog
+          open={dialog === "result"}
+          challengeTitle={challenge.title}
+          requirements={challenge.requirements}
+          score={report.score}
+          maxUsersSustained={report.attempt.maxUsersSustained}
+          costUsd={report.attempt.costUsd}
+          onOpenChange={handleDialogOpenChange}
+          onRunAgain={handleRun}
+          onEditDesign={handleEditDesign}
+        />
+      ) : null}
+
+      {report?.diagnosis && failedOutcome ? (
+        <FailureReportDialog
+          open={dialog === "failure"}
+          challengeTitle={challenge.title}
+          requirements={challenge.requirements}
+          diagnosis={report.diagnosis}
+          outcome={failedOutcome}
+          finalStep={report.result.finalStep}
+          history={history}
+          hints={challenge.hints}
+          failedAttempts={failedAttempts}
+          canShowSample={failedAttempts >= 3}
+          onOpenChange={handleDialogOpenChange}
+          onRunAgain={handleRun}
+          onEditDesign={handleEditDesign}
+          onShowSampleSolution={handleShowSampleSolution}
+        />
+      ) : null}
     </div>
   );
 }
 
 export function WorkspacePage() {
   const { id = "unknown" } = useParams();
-  const title = CHALLENGE_TITLES[id] ?? "Untitled challenge";
 
-  return <WorkspaceEditor key={id} challengeId={id} title={title} />;
+  return <WorkspaceEditor key={id} challengeId={id} />;
 }

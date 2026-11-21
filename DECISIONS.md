@@ -42,3 +42,11 @@ One line each: decision, and why.
 - **Challenge run configs live with challenges** — `loadProfile` and requirements are structural data owned by `features/challenges`. The workspace passes them to `startRun` without challenges importing simulation.
 - **The workspace locks while running** — palette, inspector, drag/connect/drop, and design shortcuts are disabled during a run. This prevents the architecture from changing underneath a worker snapshot stream.
 - **Footer credits the author** — `Built by Anirudh Kille` links to `https://anirudhkille.com`; it is a static external link, not application data.
+- **Challenge data is authored Zod-validated constants** — `challenges/data/catalog.ts` builds five `Challenge` objects through `challengeSchema.parse`, injecting starter and reference architectures. The catalogue is compiled into the bundle; nothing is fetched.
+- **Reference solutions are verified against the engine** — `simulation/__tests__/challenge-designs.test.ts` asserts every naive starter fails and every reference solution passes. This keeps the published numbers honest when engine constants change.
+- **The sample solution stays gated** — the failure report unlocks it after three failed attempts, then requires a second confirmation before replacing the design. It is a teaching aid, not the default answer.
+- **Hints reveal progressively** — the failure report shows one hint at a time, up to the challenge's three hints. The final hint names the technique but not an exact configuration.
+- **Reports reuse the diagnosis feature** — the modal renders `diagnoseFailure` output instead of duplicating rule logic. It adds evidence, the p95 sparkline, hints, and actions around the existing explanation.
+- **Scoring is deliberately simple** — one star for reaching target users, one for staying within budget, and one for 2× headroom. It rewards both correctness and efficiency without hiding the underlying SLO checks.
+- **Attempt history is session-only in M5** — attempts are capped at 20 per challenge and grouped on the Progress page. Persistence, import/export, and comparison land in M6.
+- **Challenge and report dialogs are controlled** — the workspace owns open/closed state so it can prevent duplicate attempts and keep the editor locked while a report is visible.

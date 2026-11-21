@@ -1,18 +1,13 @@
-import { ArrowRight, Gauge, Save, Sparkles } from "lucide-react";
+import { ArrowRight, Save, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-
 import { RoadmapCard, type RoadmapItem } from "../components/roadmap-card";
+import { ChallengeCard } from "../components/challenge-card";
+import { CHALLENGES } from "../data/catalog";
 
 const ROADMAP = [
-  {
-    icon: Gauge,
-    title: "Failure reports",
-    milestone: "M5",
-    body: "Every run ends with the bottleneck, the evidence, and a nudge toward the fix.",
-  },
   {
     icon: Save,
     title: "Saved progress",
@@ -32,51 +27,64 @@ export function HubPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
       <section className="max-w-3xl">
         <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-          Live load tests · M4
+          Challenges + reports · M5
         </Badge>
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           Design it. Break it. <span className="text-primary">Understand exactly why.</span>
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-          ScaleLab is a system design playground. Pick a challenge, sketch an architecture, then
-          push simulated traffic through it until the first component gives out. The failure report
-          is the lesson.
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+          ScaleLab is a local-first systems playground. Build an architecture, push simulated
+          traffic through it, and learn from the first component that gives out.
         </p>
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Button size="lg" nativeButton={false} render={<Link to="/challenge/personal-blog" />}>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button nativeButton={false} render={<Link to="/challenge/personal-blog" />}>
             Open the warm-up
             <ArrowRight className="size-4" aria-hidden="true" />
           </Button>
           <Button
-            size="lg"
-            variant="outline"
             nativeButton={false}
-            render={<Link to="/challenge/url-shortener" />}
+            render={<Link to="/challenge/flash-sale" />}
+            variant="outline"
           >
-            Try the URL shortener
+            Try the flash sale
           </Button>
         </div>
-        <p className="mt-4 font-mono text-xs text-muted-foreground">
-          100% local · no account · designed for a keyboard
+        <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+          No account. No backend. Everything runs in your browser.
         </p>
       </section>
 
-      <section className="mt-14" aria-labelledby="roadmap-heading">
-        <div className="flex items-end justify-between gap-4">
+      <section className="mt-12" aria-labelledby="challenges-heading">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="roadmap-heading" className="text-lg font-semibold tracking-tight">
-              What comes next
+            <h2 id="challenges-heading" className="text-lg font-semibold tracking-tight">
+              Challenges
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The workspace can run live load tests. Next: failure reports, the challenge catalogue,
-              and saved progress.
+              Five systems, from a static portfolio to a flash sale. Each one has a different
+              bottleneck waiting for you.
             </p>
           </div>
+          <Badge variant="secondary">{CHALLENGES.length} challenges</Badge>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {CHALLENGES.map((challenge) => (
+            <ChallengeCard key={challenge.id} challenge={challenge} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12" aria-labelledby="roadmap-heading">
+        <h2 id="roadmap-heading" className="text-sm font-semibold tracking-wider uppercase">
+          What comes next
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Failure reports and the challenge catalogue are in. Persistence and polish are next.
+        </p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {ROADMAP.map((item) => (
-            <RoadmapCard key={item.title} item={item} />
+            <RoadmapCard key={item.milestone} item={item} />
           ))}
         </div>
       </section>
