@@ -26,6 +26,21 @@ test("place a component, run a load test, and see the failure report", async ({ 
   const nodes = page.locator(".react-flow__node");
   await expect(nodes).toHaveCount(5);
 
+  const firstNode = nodes.first();
+  const before = await firstNode.boundingBox();
+  if (!before) {
+    throw new Error("Expected the first node to be visible");
+  }
+
+  await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(before.x + before.width / 2 + 3, before.y + before.height / 2 + 3);
+  await page.mouse.up();
+
+  const after = await firstNode.boundingBox();
+  expect(after?.x).toBeCloseTo(before.x, 0);
+  expect(after?.y).toBeCloseTo(before.y, 0);
+
   await page.getByRole("button", { name: "Add Cache" }).click();
   await expect(nodes).toHaveCount(6);
 

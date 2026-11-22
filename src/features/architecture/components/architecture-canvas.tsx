@@ -275,6 +275,7 @@ export function ArchitectureCanvas({
         multiSelectionKeyCode={null}
         nodesDraggable={!locked}
         nodesConnectable={!locked}
+        nodeDragThreshold={6}
         fitView
         fitViewOptions={FIT_VIEW_OPTIONS}
         minZoom={0.25}
