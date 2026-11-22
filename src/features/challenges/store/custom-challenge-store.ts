@@ -68,8 +68,11 @@ export const useCustomChallengeStore = create<CustomChallengeState>()(
         );
 
         if (!parsed.success) {
-          backupCorruptEntry(CUSTOM_CHALLENGE_STORAGE_KEY);
-          toast.error("Saved custom challenges were corrupt");
+          if (backupCorruptEntry(CUSTOM_CHALLENGE_STORAGE_KEY)) {
+            toast.error("Saved custom challenges were corrupt", {
+              description: "A backup was kept and ScaleLab started with an empty list.",
+            });
+          }
           return current;
         }
 

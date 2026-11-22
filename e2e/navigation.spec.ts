@@ -42,3 +42,23 @@ test("hub, requirements sheet, learn, and not-found pages work", async ({ page }
   await page.getByText("Back to challenges", { exact: true }).click();
   await expect(page).toHaveURL("/");
 });
+
+test("mobile layout does not overflow and a fresh profile has no corrupt-data toast", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await expect(
+    page.getByRole("heading", { name: /Design it\. Break it\. Understand exactly why\./ }),
+  ).toBeVisible();
+
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return Math.max(root.scrollWidth, document.body.scrollWidth) - root.clientWidth;
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
+
+  await expect(page.getByText("Saved custom challenges were corrupt")).toHaveCount(0);
+  await expect(page.getByText("Saved progress was corrupt")).toHaveCount(0);
+});

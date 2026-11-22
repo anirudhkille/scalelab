@@ -36,7 +36,10 @@ export function AppNav({ compact = false }: { compact?: boolean }) {
   return (
     <nav
       aria-label={compact ? "Primary mobile" : "Primary"}
-      className={cn("flex items-center gap-1", compact ? "md:hidden" : "hidden md:flex md:gap-0.5")}
+      className={cn(
+        "items-center gap-1",
+        compact ? "flex flex-wrap md:hidden" : "hidden md:flex md:gap-0.5",
+      )}
     >
       {NAV_ITEMS.map((item) => (
         <NavLink key={item.to} to={item.to} end={item.end} className={linkClassName}>
