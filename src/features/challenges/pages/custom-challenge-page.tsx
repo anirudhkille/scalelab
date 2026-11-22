@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 import { PageMeta } from "@/shared/seo";
-import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
@@ -161,10 +160,7 @@ export function CustomChallengePage() {
         path="/custom"
       />
 
-      <Badge variant="outline" className="font-mono text-[10px] tracking-[0.16em] uppercase">
-        Phase 3
-      </Badge>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">Build a custom challenge</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Build a custom challenge</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Pick a starting design, set the numbers, and run it like any built-in challenge. Custom
         challenges stay in your browser and are never uploaded.

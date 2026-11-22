@@ -96,9 +96,6 @@ export function HubPage() {
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <h3 className="text-sm font-semibold tracking-tight">{meta.label}</h3>
                   <p className="text-xs text-muted-foreground">{meta.description}</p>
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    {challenges.length}
-                  </span>
                 </div>
                 <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {challenges.map((challenge) => (
