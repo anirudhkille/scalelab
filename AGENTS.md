@@ -74,4 +74,4 @@ shared → architecture → challenges → simulation → diagnosis → progress
 - Write engine tests with the behavior, not after it.
 - Never fetch application data over the network at runtime. Everything is local.
 - Preserve the plan's feature boundaries; if a cross-feature import breaks the direction, restructure instead of adding an exception.
-- Keep files small and composable; split before ~300 lines unless there is a clear reason.
+- Keep files small and composable. `bun run lint` enforces a 700-line file cap, a 320-line component/function cap, and a 300-line named-function cap; split before hitting them.

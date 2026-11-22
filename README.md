@@ -81,7 +81,8 @@ bun run test:e2e
 
 Run `bun run format`, `typecheck`, `lint`, and `test` before calling a milestone
 complete. `bun run lint` includes `scripts/check-conventions.mjs`, which enforces
-the type and feature-boundary rules that oxlint does not cover.
+the type and feature-boundary rules that oxlint does not cover, plus size limits:
+700 lines per file, 320 per component, and 300 per named function.
 
 `bun run test:e2e` runs the Playwright browser suite against a local Vite server.
 It covers the workspace run and failure report, canvas click/drag behavior,

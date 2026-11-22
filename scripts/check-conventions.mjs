@@ -144,6 +144,72 @@ function checkTypeSyntax(file, source) {
   }
 }
 
+const MAX_FILE_LINES = 700;
+const MAX_COMPONENT_LINES = 320;
+const MAX_FUNCTION_LINES = 300;
+
+function matchingBrace(source, openIndex) {
+  let depth = 0;
+  for (let index = openIndex; index < source.length; index += 1) {
+    if (source[index] === "{") depth += 1;
+    if (source[index] === "}") {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+  return -1;
+}
+
+function checkSizes(file, source) {
+  const clean = stripComments(source);
+  const lineCount = source.split("\n").length;
+
+  if (lineCount > MAX_FILE_LINES) {
+    fail(file, 1, `file has ${lineCount} lines; max is ${MAX_FILE_LINES}`);
+  }
+
+  const pattern =
+    /^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*(?:<[^>{}]*>)?\s*\(/gm;
+
+  for (const match of clean.matchAll(pattern)) {
+    const name = match[1];
+    const openParen = clean.indexOf("(", match.index ?? 0);
+    let parenDepth = 0;
+    let closeParen = -1;
+
+    for (let index = openParen; index < clean.length; index += 1) {
+      if (clean[index] === "(") parenDepth += 1;
+      if (clean[index] === ")") {
+        parenDepth -= 1;
+        if (parenDepth === 0) {
+          closeParen = index;
+          break;
+        }
+      }
+    }
+
+    if (closeParen < 0) continue;
+
+    const openBrace = clean.indexOf("{", closeParen);
+    if (openBrace < 0) continue;
+
+    const closeBrace = matchingBrace(clean, openBrace);
+    if (closeBrace < 0) continue;
+
+    const unitLines = clean.slice(openBrace, closeBrace).split("\n").length;
+    const isComponent = /^[A-Z]/.test(name);
+    const limit = isComponent ? MAX_COMPONENT_LINES : MAX_FUNCTION_LINES;
+
+    if (unitLines > limit) {
+      fail(
+        file,
+        lineAt(clean, match.index ?? 0),
+        `${isComponent ? "component" : "function"} "${name}" is ${unitLines} lines; max is ${limit}`,
+      );
+    }
+  }
+}
+
 function checkImports(file, source) {
   const clean = stripComments(source);
   const pattern = /(?:from\s*|import\s*\(\s*)["']([^"']+)["']/g;
@@ -235,6 +301,7 @@ for (const file of files) {
   const source = readFileSync(file, "utf8");
   checkTypeSyntax(file, source);
   checkImports(file, source);
+  checkSizes(file, source);
 }
 
 if (errors.length > 0) {
