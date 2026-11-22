@@ -31,8 +31,8 @@ Run `bun run format`, `bun run typecheck`, `bun run lint`, and `bun run test` be
 
 ## Source layout
 
-- `.github/workflows/ci.yml` — PR gate: lint, typecheck, Vitest, build, and Playwright smoke.
-- `e2e/` — Playwright smoke tests for the main workspace flow.
+- `.github/workflows/ci.yml` — PR gate: lint, typecheck, Vitest, build, and Playwright.
+- `e2e/` — Playwright browser tests for the core product flows.
 - `src/app/` — composition root only: providers, router, layouts, and app-level fallback pages (`app/pages/`).
 - `src/features/<name>/` — one domain per folder, with its own pages, components, store, hooks, types, schemas, and tests.
   - Route screens live in `features/<name>/pages/` and are exported from that feature's `index.ts`. There is no top-level `src/routes/`.

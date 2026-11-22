@@ -83,11 +83,14 @@ Run `bun run format`, `typecheck`, `lint`, and `test` before calling a milestone
 complete. `bun run lint` includes `scripts/check-conventions.mjs`, which enforces
 the type and feature-boundary rules that oxlint does not cover.
 
-`bun run test:e2e` runs one Playwright smoke test against a local Vite server. On
-a fresh machine, install the browser once with `bunx playwright install chromium`.
+`bun run test:e2e` runs the Playwright browser suite against a local Vite server.
+It covers the workspace run and failure report, canvas click/drag behavior,
+hub and requirements, sandbox scoring, custom challenge create/delete, progress
+export/reset, the interview drill, and learn/not-found routes. On a fresh
+machine, install the browser once with `bunx playwright install chromium`.
 
-GitHub Actions runs lint, typecheck, unit tests, build, and the Playwright smoke
-test on every pull request and on pushes to `main`.
+GitHub Actions runs lint, typecheck, unit tests, build, and the Playwright browser
+suite on every pull request and on pushes to `main`.
 
 ## Source layout
 
